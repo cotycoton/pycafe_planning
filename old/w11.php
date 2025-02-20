@@ -8,7 +8,7 @@
 $weekNumber = isset($_GET['week']) ? (int)$_GET['week'] : 1;
 
 // Validation du numéro de semaine
-if ($weekNumber < 1 || $weekNumber > 52) {
+if ($weekNumber < 1 || $weekNumber > 152) {
     die("Numéro de semaine invalide. Veuillez fournir un numéro entre 1 et 52.");
 }
 
@@ -33,6 +33,8 @@ $timeSlots = [
     "15h30-17h30",
     "17h30-19h30"
 ];
+
+$jours=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
 
 // Couleurs pour certaines cellules
 $highlightedCells = [
@@ -328,6 +330,7 @@ $currentUser = "user1";
                 echo "<tr id=\"$timeSlot\">";
                 echo "<td id=\"col0\">" . $timeSlot . "</td>";
                 for ($col = 0; $col < 7; $col++) {
+                    $jour = $jours[$col];
                     $cellClass = "";
                     foreach ($highlightedCells as $highlight) {
                         if ($highlight["day"] == $col && in_array($timeSlot, $highlight["times"])) {
@@ -340,7 +343,7 @@ $currentUser = "user1";
                     } else {
                         // Sélectionner 3 utilisateurs au hasard
                         $randomUsers = array_slice($users, rand(0, count($users) - 3), 3);
-                        echo "<td class='$cellClass'>";
+                        echo "<td id=\"$jour\" class='$cellClass'>";
                         if ($cellClass === "highlight") {
                             echo "<ul class='user-list'>";
                             foreach ($randomUsers as $user) {
