@@ -1,0 +1,37 @@
+{
+  "name": "epicafe/planning",
+  "description": "projet planning",
+  "type": "project",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://www.projectsend.org/",
+  "support": {
+    "email": "epicerie.besayes@gmail.com",
+    "issues": "https://github.com/projectsend/projectsend/issues",
+    "source": "https://github.com/projectsend/projectsend/"
+  },
+  "config": {
+    "preferred-install": "dist"
+  },
+  "prefer-stable": true,
+  "autoload": {
+    "classmap": [
+      
+    ],
+    "files": [
+    ]
+  },
+  "require": {
+    "php": ">=7.0",
+    "claviska/simpleimage": "~3",
+    "enshrined/svg-sanitize": "^0.15.0",
+    "moxiecode/plupload": "3.1.5",
+    "paragonie/random_compat": "^2.0",
+    "phpmailer/phpmailer": "~6.1",
+    "tamtamchik/simple-flash": "^2.0",
+    "hybridauth/hybridauth": "^3.0",
+    "cocur/slugify": "^4.2",
+    "ext-pdo": "*",
+    "ext-json": "*",
+    "ext-exif": "*"
+  }
+}

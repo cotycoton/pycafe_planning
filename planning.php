@@ -34,6 +34,18 @@ try {
     die("Erreur : " . $e->getMessage());
 }
 
+$admin=0;
+if (isset($_SESSION['user_id'])) 
+{
+	$connected = 1;
+	if ($_SESSION['user_role']=="admin")
+	       $admin = 1;	
+} else 
+{
+	$connected = 0;
+}
+
+
 
 // Récupérer le numéro de semaine depuis le paramètre URL
 
@@ -297,10 +309,12 @@ $currentUser = "admin";
 					    console.log('click current-user ajouter');
 					    const mydiv = document.getElementById('myDiv');
 					    const currentUser = mydiv.getAttribute('data-param');
-					    isAdmin = (currentUser == "admin");
+					    const connected = mydiv.getAttribute('data-connected');
+					    const admin = mydiv.getAttribute('data-admin');
+					    isAdmin = (currentUser == "admin") && (connected == "1");
 					    let users_yet = [];
 					    let users = <?php echo json_encode($users); ?>;
-					    if (isAdmin) {
+					    if (connected == "1") {
 
 					    	const selectedElement = document.querySelector('.selected');
 						if (selectedElement) {
@@ -484,7 +498,13 @@ $currentUser = "admin";
     </script>
 </head>
 <body>
-    <div id="myDiv" data-param="<?php echo htmlspecialchars($currentUser); ?>"></div>
+    <?php
+        echo "<div id=\"myDiv\"";
+        echo " data-param=\"" .  htmlspecialchars($currentUser) . "\"";
+        echo " data-connected=\"" .  htmlspecialchars($connected) . "\"";
+        echo " data-admin=\"" .  htmlspecialchars($admin) . "\"";
+	echo "></div>";
+    ?>
     <div class="nav-arrows">
         <a href="?week=<?php echo $prevWeek; ?>" title="Semaine précédente">&#8592;</a>
         <a href="?week=<?php echo $nextWeek; ?>" title="Semaine suivante">&#8594;</a>
@@ -567,8 +587,10 @@ if (isset($_SESSION['user_id'])) {
 <?php
 if (isset($_SESSION['user_id'])) {
     // L'utilisateur est connecté
-	echo "<p align=\"center\">Connecté en tant que " . htmlspecialchars($_SESSION['user_name']) . " - ";;
-    echo "<a href=\"logout.php\">Déconnexion</a></p>";
+	echo "<p align=\"center\">Connecté en tant que " . htmlspecialchars($_SESSION['user_name']);
+        if ($_SESSION["user_role"] == "admin")
+	   echo " (admin) " ;
+    echo "- <a href=\"logout.php\">Déconnexion</a></p>";
 } else {
     echo "<p align=\"center\">Accès en lecture seul, veuillez vous <a href=\"login2.php\">connecter</a></p>";
 
@@ -579,8 +601,13 @@ if (isset($_SESSION['user_id'])) {
 
     <!-- Fenêtre modale -->
     <div id="userModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">Sélectionnez un utilisateur</div>
+	<div class="modal-content">
+            <?php
+		if ($_SESSION["user_role"]=="admin")
+            		echo "<div class=\"modal-header\">Sélectionnez un utilisateur</div>";
+		else
+            		echo "<div class=\"modal-header\">Options</div>";
+            ?>
             <div>
                 <select id="userSelect">
                     <?php foreach ($users as $user): ?>
@@ -656,8 +683,9 @@ if (isset($_SESSION['user_id'])) {
 
 	    const div = document.getElementById('myDiv');
 	    const currentUser = div.getAttribute('data-param');
+	    const admin = div.getAttribute('data-admin');
 
-	    isAdmin = (currentUser == "admin");
+	    isAdmin = (admin == "1");
 	    if (! isAdmin)
 		    userDiv.classList.add('current-user');
 	    
