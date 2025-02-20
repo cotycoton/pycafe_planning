@@ -1,4 +1,40 @@
 <?php
+
+require 'database.php'; // Connexion à la base de données
+
+session_start();
+try {
+    // Récupérer tous les utilisateurs sauf ceux avec le rôle 'admin'
+    $stmt = $pdo->prepare("SELECT id, firstname, lastname, email, phone FROM users WHERE role != 'admin'");
+    $stmt->execute();
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Définir les en-têtes des colonnes
+    $headers = ['ID', 'Prénom', 'Nom', 'Email', 'Téléphone'];
+
+    // Tableau pour stocker les données des utilisateurs
+    $userData = [];
+
+    // Tableau pour stocker les prénoms suivis des deux premières lettres du nom
+    $nameAbbreviations = [];
+
+    // Remplir les tableaux avec les données récupérées
+    foreach ($users as $user) {
+        $userData[] = [
+            'id' => htmlspecialchars($user['id']),
+            'prenom' => htmlspecialchars($user['firstname']),
+            'nom' => htmlspecialchars($user['lastname']),
+            'email' => htmlspecialchars($user['email']),
+            'telephone' => htmlspecialchars($user['phone'])
+        ];
+
+        $nameAbbreviations[] = htmlspecialchars($user['firstname']) . ' ' . ucfirst(substr($user['lastname'], 0, 2)) . '.';
+    }
+} catch (PDOException $e) {
+    die("Erreur : " . $e->getMessage());
+}
+
+
 // Récupérer le numéro de semaine depuis le paramètre URL
 
 $date_now = new DateTime("NOW");
@@ -65,6 +101,7 @@ $currentDate = date('d-m-Y');
 // Liste des utilisateurs
 $users = ["user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8", "user9", "user10"];
 $users = ["user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8", "user9", "user10","users11","users12","users13","users14"];
+$users =$nameAbbreviations;
 
 $jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
@@ -77,10 +114,16 @@ $currentUser = "admin";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
     <title>Tableau de la Semaine <?php echo $weekNumber; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <style>
+	h1, h2 {
+		text-align: center;
+
+        } 
         table {
             border-collapse: collapse;
             width: 100%;
@@ -447,7 +490,14 @@ $currentUser = "admin";
         <a href="?week=<?php echo $nextWeek; ?>" title="Semaine suivante">&#8594;</a>
     </div>
 
-    <h1>Tableau de la Semaine <?php echo $week; ?> (Année <?php echo $year; ?>)</h1>
+<?php
+if (isset($_SESSION['user_id'])) {
+    // L'utilisateur est connecté
+    //echo "<h1>Bienvenue " . htmlspecialchars($_SESSION['user_name']) . " sur le planning de l'epicafe!</h1>";
+} else {
+}
+?>
+    <h2>Tableau de la Semaine <?php echo $week; ?> (Année <?php echo $year; ?>)</h2>
 
     <table>
         <thead>
@@ -514,7 +564,17 @@ $currentUser = "admin";
         </tbody>
     </table>
 
-    <a href="logout.php">Déconnexion</a>
+<?php
+if (isset($_SESSION['user_id'])) {
+    // L'utilisateur est connecté
+	echo "<p align=\"center\">Connecté en tant que " . htmlspecialchars($_SESSION['user_name']) . " - ";;
+    echo "<a href=\"logout.php\">Déconnexion</a></p>";
+} else {
+    echo "<p align=\"center\">Accès en lecture seul, veuillez vous <a href=\"login2.php\">connecter</a></p>";
+
+}
+?>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Fenêtre modale -->
