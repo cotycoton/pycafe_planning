@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_role'] = $user['role'];
         $_SESSION['user_name'] = $user['firstname'] . ' ' . $user['lastname'];
+        $_SESSION['user_abb'] = $user['firstname'] . ' '  . ucfirst(substr($user['lastname'], 0, 2)) . '.';
         echo "Connexion réussie. Redirection en cours...";
         header("Refresh:2; url=planning.php"); // Redirection après connexion
     } else {
