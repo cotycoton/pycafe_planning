@@ -90,7 +90,8 @@ $timeSlots = [
     "10h30-12h30",
     "", // Ligne vide pour l'affichage
     "15h30-17h30",
-    "17h30-19h30"
+    "17h30-19h30",
+    "19h30-22h00"
 ];
 
 $jours=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
@@ -98,7 +99,7 @@ $jours=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
 // Couleurs pour certaines cellules
 $highlightedCells = [
     ["day" => 0, "times" => ["15h30-17h30", "17h30-19h30"]], // Lundi
-    ["day" => 2, "times" => $timeSlots], // Mercredi (toutes les plages horaires)
+    ["day" => 2, "times" => ["8h10-10h30", "10h30-12h30","15h30-17h30", "17h30-19h30"]],//$timeSlots], // Mercredi (toutes les plages horaires)
     ["day" => 4, "times" => ["15h30-17h30", "17h30-19h30"]], // Vendredi
     ["day" => 5, "times" => ["8h10-10h30", "10h30-12h30"]] // Samedi
 ];
@@ -118,7 +119,7 @@ $users =$nameAbbreviations;
 $jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
 
-$currentUser = "admin";
+$currentUser = $_SESSION['user_abb'];
 ?>
 
 <!DOCTYPE html>
@@ -139,19 +140,34 @@ $currentUser = "admin";
         table {
             border-collapse: collapse;
             width: 100%;
-            margin: 20px auto;
+	    margin: 20px auto;
+	    //table-layout: fixed;
         }
         th, td {
             border: 1px solid black;
             padding: 8px;
-            text-align: center;
-        }
+	    text-align: center;
+	    width: 12vw;
+	}
+	.col_1st{
+	    width: 5.5vw;
+	}
+	.col_jour{
+	    width: 13.5vw;
+	}
+	
+        .cowork {
+	}
+
         th {
             background-color: #f0f0f0;
         }
         .highlight {
-            //background-color: #ffeb3b;
             background-color: #dcedc8;
+            cursor: pointer;
+        }
+        .not_open {
+            background-color: #ffffff;
             cursor: pointer;
         }
         .selected {
@@ -253,7 +269,7 @@ $currentUser = "admin";
             margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 300px;
+            width: 350px;
         }
         .modal-header { font-weight: bold; margin-bottom: 15px; }
         .modal-footer { margin-top: 15px; text-align: right; }
@@ -262,239 +278,627 @@ $currentUser = "admin";
     </style>
     <script>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const cells = document.querySelectorAll('.highlight');
+	// Initialisation de la variable
+        let editMode = 0;
 
-            cells.forEach(cell => {
-                cell.addEventListener('click', () => {
-                    console.log('click highlight');
-                    // Retirer la sélection des autres cellules
-                    document.querySelectorAll('.selected').forEach(selectedCell => {
-                        selectedCell.classList.remove('selected');
-                        const trashButtons = selectedCell.querySelectorAll('.remove-user');
-                        trashButtons.forEach(button => button.classList.remove('visible-button'));
-                        trashButtons.forEach(button => button.classList.add('hidden-button'));
-                        
-			const addButtons = selectedCell.querySelectorAll('.add-user');
-                        addButtons.forEach(button => button.classList.remove('visible-button'));
-                        addButtons.forEach(button => button.classList.add('hidden-button'));
-                    });
+	function cleanSelected()
+	{
+		document.querySelectorAll('.selected').forEach(selectedCell => {
+		selectedCell.classList.remove('selected');
+		
+		const trashButtons = selectedCell.querySelectorAll('.remove-user');
+		trashButtons.forEach(button => button.classList.remove('visible-button'));
+		trashButtons.forEach(button => button.classList.add('hidden-button'));
 
-                    // Ajouter la classe selected à la cellule cliquée
-                    cell.classList.add('selected');
-                    const trashButtons = cell.querySelectorAll('.remove-user');
-		    // affichage bouton trash
-                    console.log('trashButtons',trashButtons);
-                    trashButtons.forEach(button => button.classList.remove('hidden-button'));
-                    trashButtons.forEach(button => button.classList.add('visible-button'));
+		const addButtons = selectedCell.querySelectorAll('.add-user');
+		addButtons.forEach(button => button.classList.remove('visible-button'));
+		addButtons.forEach(button => button.classList.add('hidden-button'));
+		});
+	}
+	
+	function displaySelected(cell)
+	{
+		const mydiv = document.getElementById('myDiv');
+		const currentUser = mydiv.getAttribute('data-param');
+		const connected = mydiv.getAttribute('data-connected');
+		const admin = mydiv.getAttribute('data-admin');
+		isAdmin = (admin == "1") && (connected == "1");
 
-		    //creation bouton ajouter
-                    const addButtons = cell.querySelectorAll('.add-user');
-                    console.log('click highlight, addButton = ',addButtons.length);
-	            const userLists = cell.querySelectorAll('.user-list');
-	            const currentUsers = cell.querySelectorAll('.current-user');
-                    console.log('click highlight, userLists = ',userLists.length);
-	            if (userLists.length == 1)
+		console.log('admin ',admin," connected ", connected, " isAdmin ",isAdmin);
+
+		const trashButtons = cell.querySelectorAll('.remove-user');
+		console.log('trashButtons',trashButtons,trashButtons.length);
+
+		trashButtons.forEach(button => button.classList.remove('hidden-button'));
+
+		trashButtons.forEach
+		(
+			button => 
+			{
+				// Récupérer le texte du parent de l'élément
+				const parentText = button.parentNode.textContent.trim();
+				// Vérifier si admin est égal à 1 ou si le texte du parent est 'user'
+				if ((isAdmin) || (parentText === currentUser)) 
+				{
+					button.classList.remove('hidden-button');
+					button.classList.add('visible-button');
+					console.log("set button " + parentText + " visible");
+				}
+				else
+				{
+					console.log("set button " + parentText + " hidden");
+					button.classList.remove('visible-button');
+					button.classList.add('hidden-button');
+				}
+			}
+		);
+
+		document.querySelectorAll('.selected').forEach
+		(
+			selectedCell => 
+			{
+				const addButtons = selectedCell.querySelectorAll('.add-user');
+				addButtons.forEach(button => button.classList.add('visible-button'));
+				addButtons.forEach(button => button.classList.remove('hidden-button'));
+
+			}
+		);
+	}
+
+
+	//creation bouton ajouter
+	function addButtonUser(cell)
+	{
+		const mydiv = document.getElementById('myDiv');
+		const currentUser = mydiv.getAttribute('data-param');
+		const connected = mydiv.getAttribute('data-connected');
+		const admin = mydiv.getAttribute('data-admin');
+		isAdmin = (admin == "1") && (connected == "1");
+
+		const addButtons = cell.querySelectorAll('.add-user');
+		console.log('click highlight, addButton = ',addButtons.length);
+		const userLists = cell.querySelectorAll('.user-list');
+		const currentUsers = cell.querySelectorAll('.current-user');
+		console.log('click highlight, userLists = ',userLists.length);
+		if (userLists.length == 1)
 			userList = userLists[0];
-		    //const userList = event.target.closest('.user-list');
-                    if ((addButtons.length == 0) &&  (userLists.length == 1))
-		    {
-			    console.log("ajout du bouton ajouter");
-			    let addButton;
-			    //const addButton = document.createElement('button');
-			    addButton = document.createElement('button');
-    			    addButton.innerHTML = '<div>Ajouterr&nbsp;&nbsp;&nbsp<i class="bi bi-clipboard-plus"></i></div>';
-			    addButton.className = 'action-button add-user';
-			    addButton.addEventListener('click', () => {
-					    console.log('click current-user ajouter');
-					    const mydiv = document.getElementById('myDiv');
-					    const currentUser = mydiv.getAttribute('data-param');
-					    const connected = mydiv.getAttribute('data-connected');
-					    const admin = mydiv.getAttribute('data-admin');
-					    isAdmin = (currentUser == "admin") && (connected == "1");
-					    let users_yet = [];
-					    let users = <?php echo json_encode($users); ?>;
-					    if (connected == "1") {
 
-					    	const selectedElement = document.querySelector('.selected');
-						if (selectedElement) {
-						// Récupère toutes les balises avec la classe "user" à l'intérieur de l'élément sélectionné
-						const users = selectedElement.querySelectorAll('.user');
+		let users_yet = [];
+		let users_all = <?php echo json_encode($users); ?>;
+		const users = cell.querySelectorAll('.user, .current-user');
+		users.forEach
+		(
+			user => 
+			{
+				users_yet.push(user.textContent);
+				console.log(user.textContent); // Affiche le contenu texte de chaque utilisateur
+			}
+		);
+		if ( !isAdmin)
+			users_all = [currentUser];
 
-						// Affiche chaque utilisateur trouvé dans la console
-						console.log("build users_yet");
-						users.forEach(user => {
-								users_yet.push(user.textContent);
-								console.log(user.textContent); // Affiche le contenu texte de chaque utilisateur
-								});
+		const availableUsers = users_all.filter(user => !users_yet.includes(user));
+		
+		console.log("users_all :");
+		console.log(users_all);
+
+		console.log("users :");
+		console.log(users);
+
+		console.log("users_yet :");
+		console.log(users_yet);
+
+		console.log("available users :");
+		console.log(availableUsers); // Affiche le contenu texte de chaque utilisateur
+
+		if ((addButtons.length == 0) &&  (userLists.length == 1) && (availableUsers.length >0))
+		{
+			console.log("creation du bouton ajouter");
+			let addButton;
+			//const addButton = document.createElement('button');
+			addButton = document.createElement('button');
+			addButton.innerHTML = '<div>Ajouterr&nbsp;&nbsp;&nbsp<i class="bi bi-clipboard-plus"></i></div>';
+			addButton.className = 'action-button add-user';
+			addButton.addEventListener('click', () => {
+			console.log('click current-user ajouter');
+			//const mydiv = document.getElementById('myDiv');
+			//const currentUser = mydiv.getAttribute('data-param');
+			//const connected = mydiv.getAttribute('data-connected');
+			//const admin = mydiv.getAttribute('data-admin');
+			//isAdmin = (admin == "1") && (connected == "1");
+			//let users_yet = [];
+			//let users_all = <?php echo json_encode($users); ?>;
+
+			// necessite etre connecter
+			if (connected == "1") 
+			{
+				console.log("connectec = 1");
+				//const selectedElement = document.querySelector('.selected');
+				//if (selectedElement) 
+				//{
+				//	// Récupère toutes les balises avec la classe "user" à l'intérieur de l'élément sélectionné
+				//	const users = selectedElement.querySelectorAll('.user');
+
+				//	// Affiche chaque utilisateur trouvé dans la console
+				//	console.log("build users_yet");
+				//	users.forEach
+				//	(
+				//		user => 
+				//		{
+				//			users_yet.push(user.textContent);
+				//			console.log(user.textContent); // Affiche le contenu texte de chaque utilisateur
+				//		}
+				//	);
+				//}
+				//const availableUsers = users_all.filter(user => !users_yet.includes(user));
+
+				console.log("users :");
+				console.log(users);
+
+				console.log("users_yet :");
+				console.log(users_yet);
+
+				console.log("available users :");
+				console.log(availableUsers); // Affiche le contenu texte de chaque utilisateur
+
+				const combo_liste = document.getElementById('userSelect');
+				const users_list = combo_liste.querySelectorAll('.user-poplist');
+				console.log("MAJ users poplist ");
+				users_list.forEach
+				(
+					user => 
+					{
+						if (availableUsers.includes(user.textContent))
+						{
+							user.classList.remove("hidden-option");
+							user.classList.add("visible-option");
+							console.log("users poplist "+user.textContent + " set visible");
 						}
-
-						console.log("users :");
-						console.log(users);
-						
-						console.log("users_yet :");
-						console.log(users_yet);
-
-						const availableUsers = users.filter(user => !users_yet.includes(user));
-						console.log("available users :");
-						console.log(availableUsers); // Affiche le contenu texte de chaque utilisateur
-
-					    	const combo_liste = document.getElementById('userSelect');
-						const users_list = combo_liste.querySelectorAll('.user-poplist');
-						users_list.forEach(user => {
-								console.log("users poplist"+user.textContent);
-								if (availableUsers.includes(user.textContent))
-								{
-									user.classList.remove("hidden-option");
-									user.classList.add("visible-option");
-								}
-								else
-								{
-									user.classList.remove("visible-option");
-									user.classList.add("hidden-option");
-								}
-								});
-
-						const visibleOption = Array.from(combo_liste.options).find(option => {
-								return window.getComputedStyle(option).display !== "none"; // Vérifie le style calculé
-								});
-
-						// Définir cet élément comme sélectionné
-						if (visibleOption) {
-							visibleOption.selected = true;
-						}
-
-
-					    	const modal = document.getElementById('userModal');
-						modal.style.display = 'block';
-					    }
-					    else
-					    {
-					    	const userItem = document.createElement('li');
-						const userDiv = document.createElement('div');
-
-
-						userDiv.classList.add('user');
-						userDiv.classList.add('current-user');
-						userToAdd = currentUser;
-
-						userDiv.textContent = userToAdd;
-						userItem.appendChild(userDiv);
-						//userItem.textContent = currentUser;
-						const removeButton = document.createElement('button');
-						removeButton.innerHTML = '<i class="bi bi-trash"></i>';
-						removeButton.className = 'action-button remove-user';
-					    
-						const mydiv = document.getElementById('myDiv');
-						const currentUser = mydiv.getAttribute('data-param');
-					    	isAdmin = (currentUser == "admin");
-						if (!isAdmin)
-							removeButton.addEventListener('click', () => removeButton.closest('li').remove());
 						else
-							removeButton.addEventListener('click', () => modalDelete.style.display = 'inline');
-						//userItem.appendChild(removeButton);
-						userDiv.appendChild(removeButton);
-						userList.appendChild(userItem);
-						addButton.classList.remove('visible-button');
-						addButton.classList.add('hidden-button');
-						//addButton.style.visibility='hidden';
-						//addButton.remove();
-					    }
-			    });
-			    addButton.classList.remove('visible-button');
-			    addButton.classList.add('hidden-button');
-		            const liItem = document.createElement('li');
-		            const divItem = document.createElement('div');
-			    divItem.appendChild(addButton);
-			    divItem.classList.add('current-user-add');
-			    divItem.classList.add('user');
-			    liItem.appendChild(divItem);
-                            userList.appendChild(liItem);
-		    }
-		    if (currentUsers.length == 0)
-                    {
-	            	    addButton = userList.querySelectorAll('.add-user')[0];
-			    addButton.classList.remove('hidden-button');
-			    addButton.classList.add('visible-button');
-                    }
+						{
+							user.classList.remove("visible-option");
+							user.classList.add("hidden-option");
+							console.log("users poplist "+user.textContent + " set hidden");
+						}
+					}
+				);
 
-                });
-            });
+				const visibleOption = Array.from(combo_liste.options).find(option => {
+				return window.getComputedStyle(option).display !== "none"; // Vérifie le style calculé
+				});
 
-            document.body.addEventListener('click', (event) => {
-                if (event.target.classList.contains('current-user')) {
-	            const parent = event.target.parentElement;
-                    if ( !parent.classList.contains('selected'))
-                    {
-			return;
-                    }
-                    const userList = event.target.closest('.user-list');
-                    const addButtons = event.target.querySelectorAll('.add-user');
-                    console.log('click highlight avec current-user, addButton',addButtons.length);
-                    if (addButtons.length == 0)
-		    {
-                        const addButton = document.createElement('button');
-                        addButton.textContent = 'Ajouter';
-                        addButton.className = 'action-button add-user';
-                        addButton.addEventListener('click', () => {
-                        	console.log('click current-user ajouter');
-    		         	const userItem = document.createElement('li');
-    			        const userDiv = document.createElement('div');
-        
-        			const mydiv = document.getElementById('myDiv');
-        			const currentUser = mydiv.getAttribute('data-param');
-        
-        			userDiv.classList.add('current-user');
-    				userDiv.textContent = currentUser;
-   	 			userItem.appendChild(userDiv);
-    				const removeButton = document.createElement('button');
-    				removeButton.innerHTML = '<i class="bi bi-trash"></i>';
-    				removeButton.className = 'action-button remove-user';
-				if (!isAdmin)
-					removeButton.addEventListener('click', () => removeButton.closest('li').remove());
-				else			
-					removeButton.addEventListener('click', () => modalDelete.style.display = 'inline');
-    				userDiv.appendChild(removeButton);
-    				userList.appendChild(userItem);
-    				addButton.classList.remove('visible-button');
-    				addButton.classList.add('hidden-button');
-    			});
-			userList.appendChild(addButton);
-			console.log("ajout du bouton ajouter depuis current-user");
-    		    }
-                    event.target.closest('li').remove();
-                }
-            });
+				// Définir cet élément comme sélectionné
+				if (visibleOption) {
+					visibleOption.selected = true;
+				}
 
 
-            document.body.addEventListener('click', (event) => {
-                if (event.target.classList.contains('remove-user')) {
+				const modal = document.getElementById('userModal');
+				modal.style.display = 'block';
+			}
+
+			});
+			addButton.classList.remove('visible-button');
+			addButton.classList.add('hidden-button');
+			const liItem = document.createElement('li');
+			const divItem = document.createElement('div');
+			divItem.appendChild(addButton);
+			divItem.classList.add('current-user-add');
+			//divItem.classList.add('user');
+			liItem.appendChild(divItem);
+			userList.appendChild(liItem);
+		}
+		if (currentUsers.length == 0)
+		{
+			const addButtons = userList.querySelectorAll('.add-user');//[0];
+			if (addButtons.length >0)
+			{
+				addButton = addButtons[0];
+				addButton.classList.remove('hidden-button');
+				addButton.classList.add('visible-button');
+			}
+		}
+
+	}
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('#tableContainer');
+	    console.log(container);
+
+	    container.addEventListener('click', (event) => {
+	    // Vérifier si l'élément cliqué a la classe .highlight
+		console.log(event.target.classList);
+		if (editMode == 1)
+		{
+			console.log('Cellule cliquée :', event.target.textContent);
+			cell = event.target;
+	        	if (event.target.classList.contains('not_open')) 
+			{
+                            	cell.classList.remove("not_open");
+                            	cell.classList.add("highlight");
+                        }
+			else if (event.target.classList.contains('highlight')) 
+			{
+				cell.classList.remove("highlight");
+				cell.classList.add("not_open");
+			}
+			else if (event.target.classList.contains('user')) 
+			{
+				const parent = cell.closest('.user-list');
+				const parent2 = parent.parentNode;
+				if (parent2.classList.contains('not_open'))
+				{
+					parent2.classList.remove("not_open");
+					parent2.classList.add("highlight");
+				}
+				else
+				{
+					parent2.classList.remove("highlight");
+					parent2.classList.add("not_open");
+				}
+			}
+
+
+		}
+		else
+		{
+			console.log('Cellule cliquée :', event.target.textContent);
+			cell = event.target;
+			if (event.target.classList.contains('highlight')) 
+			{
+				console.log('click highlight');
+				// Retirer la sélection des autres cellules
+				cleanSelected();
+    
+				// Ajouter la classe selected à la cellule cliquée
+				cell.classList.add('selected');
+				
+				displaySelected(cell);
+				addButtonUser(cell);
+
+
+			 }
+			 else if ( (event.target.classList.contains('user')) || (event.target.classList.contains('current-user')) ) 
+			 {
+				cell = event.target;
+				console.log(cell.textContent);
+				const parent = cell.closest('.user-list');
+				const parent2 = parent.parentNode;
+
+				cleanSelected();
+
+				if (parent2.classList.contains('not_open'))
+					return;
+
+				// Ajouter la classe selected à la cellule cliquée
+				parent2.classList.add("selected");
+				
+				displaySelected(parent2);
+				addButtonUser(parent2);
+				 
+			 }
+		}
+
+
+	    });
+	});
+//
+//	document.addEventListener('DOMContentLoaded', () => 
+//	{
+//            const cells = document.querySelectorAll('.highlight');
+//
+//            cells.forEach(cell => {
+//                cell.addEventListener('click', () => {
+//		
+//		    if (editMode == 1)
+//                    {
+//                            cell.classList.remove("highlight");
+//                            cell.classList.add("not_open");
+//                    }
+//		    else
+//		    {
+//			    console.log('click highlight');
+//			    // Retirer la sélection des autres cellules
+//			    document.querySelectorAll('.selected').forEach(selectedCell => {
+//			    selectedCell.classList.remove('selected');
+//			    const trashButtons = selectedCell.querySelectorAll('.remove-user');
+//			    trashButtons.forEach(button => button.classList.remove('visible-button'));
+//			    trashButtons.forEach(button => button.classList.add('hidden-button'));
+//
+//			    const addButtons = selectedCell.querySelectorAll('.add-user');
+//			    addButtons.forEach(button => button.classList.remove('visible-button'));
+//			    addButtons.forEach(button => button.classList.add('hidden-button'));
+//			    });
+//
+//			    // Ajouter la classe selected à la cellule cliquée
+//			    cell.classList.add('selected');
+//			    const trashButtons = cell.querySelectorAll('.remove-user');
+//			    // affichage bouton trash
+//			    const mydiv = document.getElementById('myDiv');
+//			    const currentUser = mydiv.getAttribute('data-param');
+//			    const connected = mydiv.getAttribute('data-connected');
+//			    const admin = mydiv.getAttribute('data-admin');
+//			    isAdmin = (admin == "1") && (connected == "1");
+//
+//			    console.log('admin ',admin," connected ", connected, " isAdmin ",isAdmin);
+//			    console.log('trashButtons',trashButtons);
+//
+//			    trashButtons.forEach(button => button.classList.remove('hidden-button'));
+//			    trashButtons.forEach(button => {
+//			    // Récupérer le texte du parent de l'élément
+//			    const parentText = button.parentNode.textContent.trim();
+//			    // Vérifier si admin est égal à 1 ou si le texte du parent est 'user'
+//			    if ((isAdmin) || (parentText === currentUser)) {
+//				    button.classList.add('visible-button');
+//				    console.log("set button " + parentText + " visible");
+//			    }
+//			    else
+//			    {
+//				    console.log("set button " + parentText + " hidden");
+//				    button.classList.add('hidden-button');
+//			    }
+//			    });
+//
+//			    //creation bouton ajouter
+//			    const addButtons = cell.querySelectorAll('.add-user');
+//			    console.log('click highlight, addButton = ',addButtons.length);
+//			    const userLists = cell.querySelectorAll('.user-list');
+//			    const currentUsers = cell.querySelectorAll('.current-user');
+//			    console.log('click highlight, userLists = ',userLists.length);
+//			    if (userLists.length == 1)
+//				    userList = userLists[0];
+//
+//			    let users_yet = [];
+//			    let users_all = <?php echo json_encode($users); ?>;
+//			    const users = cell.querySelectorAll('.user, .current-user');
+//			    users.forEach(user => {
+//			    users_yet.push(user.textContent);
+//			    console.log(user.textContent); // Affiche le contenu texte de chaque utilisateur
+//			    });
+//			    const availableUsers = users_all.filter(user => !users_yet.includes(user));
+//
+//			    console.log("users :");
+//			    console.log(users);
+//
+//			    console.log("users_yet :");
+//			    console.log(users_yet);
+//
+//			    console.log("available users :");
+//			    console.log(availableUsers); // Affiche le contenu texte de chaque utilisateur
+//
+//
+//
+//			    //const userList = event.target.closest('.user-list');
+//			    if ((addButtons.length == 0) &&  (userLists.length == 1) && (availableUsers.length >0))
+//			    {
+//				    console.log("creation du bouton ajouter");
+//				    let addButton;
+//				    //const addButton = document.createElement('button');
+//				    addButton = document.createElement('button');
+//				    addButton.innerHTML = '<div>Ajouterr&nbsp;&nbsp;&nbsp<i class="bi bi-clipboard-plus"></i></div>';
+//				    addButton.className = 'action-button add-user';
+//				    addButton.addEventListener('click', () => {
+//				    console.log('click current-user ajouter');
+//				    const mydiv = document.getElementById('myDiv');
+//				    const currentUser = mydiv.getAttribute('data-param');
+//				    const connected = mydiv.getAttribute('data-connected');
+//				    const admin = mydiv.getAttribute('data-admin');
+//				    isAdmin = (admin == "1") && (connected == "1");
+//				    let users_yet = [];
+//				    let users_all = <?php echo json_encode($users); ?>;
+//				    if (connected == "1") {
+//					    console.log("connectec = 1");
+//					    const selectedElement = document.querySelector('.selected');
+//					    if (selectedElement) {
+//						    // Récupère toutes les balises avec la classe "user" à l'intérieur de l'élément sélectionné
+//						    const users = selectedElement.querySelectorAll('.user');
+//
+//						    // Affiche chaque utilisateur trouvé dans la console
+//						    console.log("build users_yet");
+//						    users.forEach(user => {
+//						    users_yet.push(user.textContent);
+//						    console.log(user.textContent); // Affiche le contenu texte de chaque utilisateur
+//						    });
+//					    }
+//					    const availableUsers = users_all.filter(user => !users_yet.includes(user));
+//
+//					    console.log("users :");
+//					    console.log(users);
+//
+//					    console.log("users_yet :");
+//					    console.log(users_yet);
+//
+//					    console.log("available users :");
+//					    console.log(availableUsers); // Affiche le contenu texte de chaque utilisateur
+//
+//					    const combo_liste = document.getElementById('userSelect');
+//					    const users_list = combo_liste.querySelectorAll('.user-poplist');
+//					    console.log("MAJ users poplist ");
+//					    users_list.forEach(user => {
+//					    if (availableUsers.includes(user.textContent))
+//					    {
+//						    user.classList.remove("hidden-option");
+//						    user.classList.add("visible-option");
+//						    console.log("users poplist "+user.textContent + " set visible");
+//					    }
+//					    else
+//					    {
+//						    user.classList.remove("visible-option");
+//						    user.classList.add("hidden-option");
+//						    console.log("users poplist "+user.textContent + " set hidden");
+//					    }
+//					    });
+//
+//					    const visibleOption = Array.from(combo_liste.options).find(option => {
+//					    return window.getComputedStyle(option).display !== "none"; // Vérifie le style calculé
+//					    });
+//
+//					    // Définir cet élément comme sélectionné
+//					    if (visibleOption) {
+//						    visibleOption.selected = true;
+//					    }
+//
+//
+//					    const modal = document.getElementById('userModal');
+//					    modal.style.display = 'block';
+//				    }
+//				    else if (0 == 1)// todelete
+//				    {
+//					    const userItem = document.createElement('li');
+//					    const userDiv = document.createElement('div');
+//
+//
+//					    userDiv.classList.add('user');
+//					    userDiv.classList.add('current-user');
+//					    userToAdd = currentUser;
+//
+//					    userDiv.textContent = userToAdd;
+//					    userItem.appendChild(userDiv);
+//					    //userItem.textContent = currentUser;
+//					    const removeButton = document.createElement('button');
+//					    removeButton.innerHTML = '<i class="bi bi-trash"></i>';
+//					    removeButton.className = 'action-button remove-user';
+//
+//					    const mydiv = document.getElementById('myDiv');
+//					    const currentUser = mydiv.getAttribute('data-param');
+//					    const admin = mydiv.getAttribute('data-admin');
+//					    isAdmin = (admin == "1");
+//					    //if (!isAdmin)
+//					    //	removeButton.addEventListener('click', () => removeButton.closest('li').remove());
+//					    //else
+//					    //	removeButton.addEventListener('click', () => modalDelete.style.display = 'inline');
+//					    //removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));
+//					    //userItem.appendChild(removeButton);
+//					    userDiv.appendChild(removeButton);
+//					    userList.appendChild(userItem);
+//					    addButton.classList.remove('visible-button');
+//					    addButton.classList.add('hidden-button');
+//					    removeButton.setAttribute('onclick', "removeItemAdmin(this, '"+userToAdd+ "')");
+//					    //removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));
+//					    //addButton.style.visibility='hidden';
+//					    //addButton.remove();
+//				    }
+//				    });
+//				    addButton.classList.remove('visible-button');
+//				    addButton.classList.add('hidden-button');
+//				    const liItem = document.createElement('li');
+//				    const divItem = document.createElement('div');
+//				    divItem.appendChild(addButton);
+//				    divItem.classList.add('current-user-add');
+//				    //divItem.classList.add('user');
+//				    liItem.appendChild(divItem);
+//				    userList.appendChild(liItem);
+//			    }
+//			    if (currentUsers.length == 0)
+//			    {
+//				    const addButtons = userList.querySelectorAll('.add-user');//[0];
+//				    if (addButtons.length >0)
+//				    {
+//					    addButton = addButtons[0];
+//					    addButton.classList.remove('hidden-button');
+//					    addButton.classList.add('visible-button');
+//				    }
+//			    }
+//		    }
+//                });
+//            });
+//
+//            document.body.addEventListener('click', (event) => {
+//                if (event.target.classList.contains('current-user')) {
+//	            const parent = event.target.parentElement;
+//                    if ( !parent.classList.contains('selected'))
+//                    {
+//			return;
+//                    }
 //                    const userList = event.target.closest('.user-list');
-//                    const addButton = document.createElement('button');
-//                    addButton.textContent = 'Ajouter';
-//                    addButton.className = 'action-button add-user';
-//                    addButton.addEventListener('click', () => {
-//                        const userItem = document.createElement('li');
-//                        userItem.textContent = 'user1';
-//                        const removeButton = document.createElement('button');
-//                        removeButton.inn	erHTML = '<i class="bi bi-trash"></i>';
-//                        removeButton.className = 'action-button remove-user';
-//                        removeButton.addEventListener('click', () => 
-//			{
-//                           removeButton.closest('li').remove()
-//                           addButton.classList.remove('hidden-button');
-//			   addButton.classList.add('visible-button');
-//			});
-//                        userItem.appendChild(removeButton);
-//                        userList.appendChild(userItem);
-//			addButton.classList.remove('visible-button');
-//			addButton.classList.add('hidden-button');
-//                    });
-//                    userList.appendChild(addButton);
-                    event.target.closest('li').remove();
-                }
-            });
-        });
+//                    const addButtons = event.target.querySelectorAll('.add-user');
+//                    console.log('click highlight avec current-user, addButton',addButtons.length);
+//                    if (addButtons.length == 0)
+//		    {
+//                        const addButton = document.createElement('button');
+//                        addButton.textContent = 'Ajouter';
+//                        addButton.className = 'action-button add-user';
+//                        addButton.addEventListener('click', () => {
+//                        	console.log('click current-user ajouter');
+//    		         	const userItem = document.createElement('li');
+//    			        const userDiv = document.createElement('div');
+//        
+//        			const mydiv = document.getElementById('myDiv');
+//        			const currentUser = mydiv.getAttribute('data-param');
+//        			const admin = mydiv.getAttribute('data-admin');
+//        
+//        			userDiv.classList.add('current-user');
+//    				userDiv.textContent = currentUser;
+//   	 			userItem.appendChild(userDiv);
+//    				const removeButton = document.createElement('button');
+//    				removeButton.innerHTML = '<i class="bi bi-trash"></i>';
+//				removeButton.className = 'action-button remove-user';
+//				isAdmin = (admin == "1");
+//				//if (!isAdmin)
+//				//	removeButton.addEventListener('click', () => removeButton.closest('li').remove());
+//				//else			
+//				//	removeButton.addEventListener('click', () => modalDelete.style.display = 'inline');
+//				removeButton.addEventListener('click', () => removeItemAdmin(removeButton,currentUser));
+//    				userDiv.appendChild(removeButton);
+//    				userList.appendChild(userItem);
+//    				addButton.classList.remove('visible-button');
+//    				addButton.classList.add('hidden-button');
+//    			});
+//			userList.appendChild(addButton);
+//			console.log("ajout du bouton ajouter depuis current-user");
+//    		    }
+//                    event.target.closest('li').remove();
+//                }
+//            });
+//
+//
+//            document.body.addEventListener('click', (event) => {
+//                if (event.target.classList.contains('remove-user')) {
+////                    const userList = event.target.closest('.user-list');
+////                    const addButton = document.createElement('button');
+////                    addButton.textContent = 'Ajouter';
+////                    addButton.className = 'action-button add-user';
+////                    addButton.addEventListener('click', () => {
+////                        const userItem = document.createElement('li');
+////                        userItem.textContent = 'user1';
+////                        const removeButton = document.createElement('button');
+////                        removeButton.inn	erHTML = '<i class="bi bi-trash"></i>';
+////                        removeButton.className = 'action-button remove-user';
+////                        removeButton.addEventListener('click', () => 
+////			{
+////                           removeButton.closest('li').remove()
+////                           addButton.classList.remove('hidden-button');
+////			   addButton.classList.add('visible-button');
+////			});
+////                        userItem.appendChild(removeButton);
+////                        userList.appendChild(userItem);
+////			addButton.classList.remove('visible-button');
+////			addButton.classList.add('hidden-button');
+////                    });
+////                    userList.appendChild(addButton);
+//                    event.target.closest('li').remove();
+//                }
+//            });
+//	}
+//	);
+//
+//	document.addEventListener('DOMContentLoaded', () => {
+//               const cells = document.querySelectorAll('.not_open');
+//            
+//               cells.forEach(cell => {
+//                        cell.addEventListener('click', () => {
+//                        if (editMode == 1)
+//                        {
+//                            cell.classList.remove("not_open");
+//                            cell.classList.add("highlight");
+//                        }
+//            	    });
+//            	});
+//        
+//        });
+
+
     </script>
 </head>
 <body>
@@ -519,15 +923,15 @@ if (isset($_SESSION['user_id'])) {
 ?>
     <h2>Tableau de la Semaine <?php echo $week; ?> (Année <?php echo $year; ?>)</h2>
 
-    <table>
+    <table id="tableContainer">
         <thead>
             <tr>
-                <th>#</th>
+                <th class="col_1st">#</th>
                 <?php
                 foreach ($daysOfWeek as $index => $day) {
                     $dtime = DateTime::createFromFormat('d-m-Y', $day);
                     $class = ($day === $currentDate) ? "today" : "";
-                    echo "<th class='$class'>" . $jours[$dtime->format('w')] . "<br>" . $day . "</th>";
+                    echo "<th class='$class col_jour'>" . $jours[$dtime->format('w')] . "<br>" . $day . "</th>";
                 }
                 ?>
             </tr>
@@ -539,7 +943,7 @@ if (isset($_SESSION['user_id'])) {
                 echo "<td id=\"col0\">" . $timeSlot . "</td>";
                 for ($col = 0; $col < 7; $col++) {
                     $jour = $jours[$col];
-                    $cellClass = "";
+                    $cellClass = "not_open";
                     foreach ($highlightedCells as $highlight) {
                         if ($highlight["day"] == $col && in_array($timeSlot, $highlight["times"])) {
                             $cellClass = "highlight";
@@ -547,34 +951,38 @@ if (isset($_SESSION['user_id'])) {
                         }
                     }
                     if ($timeSlot === "") {
-                        echo "<td></td>"; // Cellules vides pour les lignes sans plages horaires
+                        echo "<td class=\"col_jour\"></td>"; // Cellules vides pour les lignes sans plages horaires
                     } else {
                         // Sélectionner 3 utilisateurs au hasard
                         $randomUsers = array_slice($users, rand(0, count($users) - 3), 3);
-                        echo "<td id=\"$jour\" class='$cellClass'>";
+                        $randomUsers = array_slice($users, rand(0, count($users) - 3), rand(0,count($users)));
+                        echo "<td id=\"$jour\" class='$cellClass col_jour'>";
                         if ($cellClass === "highlight") {
                             echo "<ul class='user-list'>";
                             foreach ($randomUsers as $user) {
-				$isAdmin = $currentUser == "admin";
+				$isAdmin = $admin;
                                 if ($user == $currentUser) {
-                                    echo "<li><div class=\"current-user\">$user";
-                                    echo "<button onclick=\"removeItem(this)\" class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
+                                    echo "<li><div data-cowork=\"false\" class=\"current-user\">$user";
+                                    echo "<button onclick=\"removeItemAdmin(this,'" .$user . "')\" class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
                                     echo "</div>";
                                 }
 				elseif ($isAdmin) {
-                                    echo "<li><div class=\"user\">$user";
+                                    echo "<li><div  data-cowork=\"false\" class=\"user\">$user";
                                     //echo "<button onclick=\"removeItemAdmin(this)\"  class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
                                     echo "<button onclick=\"removeItemAdmin(this,'" .$user . "')\"  class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
                                     echo "</div>";
                                 }
 				else
 				{
-                                    echo "<li>$user";
+                                    echo "<li><div  data-cowork=\"false\" class=\"user\">$user";
+                                    echo "</div>";
 				}
                                 echo "</li>";
                             }
                             echo "</ul>";
-                        }
+			}
+			else
+                            echo "<ul class='user-list'></ul>";
                         echo "</td>";
                     }
                 }
@@ -590,13 +998,39 @@ if (isset($_SESSION['user_id'])) {
 	echo "<p align=\"center\">Connecté en tant que " . htmlspecialchars($_SESSION['user_name']);
         if ($_SESSION["user_role"] == "admin")
 	   echo " (admin) " ;
-    echo "- <a href=\"logout.php\">Déconnexion</a></p>";
+    echo "- <a href=\"logout.php\">Déconnexion</a>";
+    echo "- <a href=\"#\" id=\"toggleEditMode\" >Edit mode</a></p>";
 } else {
     echo "<p align=\"center\">Accès en lecture seul, veuillez vous <a href=\"login2.php\">connecter</a></p>";
 
 }
 ?>
+	<script>
+        // Récupération du lien par son ID
+        const link = document.getElementById('toggleEditMode');
 
+        // Ajout d'un écouteur d'événement pour le clic sur le lien
+        link.addEventListener('click', function(event) {
+            // Empêcher le comportement par défaut du lien
+            event.preventDefault();
+
+            // Toggle la variable entre 0 et 1
+            editMode = editMode === 0 ? 1 : 0;
+
+            // Changer le texte du lien en fonction de la valeur de la variable
+            if (editMode === 1) {
+                link.textContent = 'Désactiver Edit Mode';
+            } else {
+                link.textContent = 'Activer Edit Mode';
+            }
+
+            // Afficher la valeur de la variable dans la console (pour le débogage)
+            console.log('editMode:', editMode);
+        });
+
+
+
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Fenêtre modale -->
@@ -614,7 +1048,10 @@ if (isset($_SESSION['user_id'])) {
                         <option class="user-poplist visible-option" value="<?php echo $user; ?>"><?php echo $user; ?></option>
                     <?php endforeach; ?>
                 </select>
-            </div>
+	    </div>
+            <label>Je souhaites assurer le service à 2
+                <input id="userService" type="checkbox" name="service" value="accept">
+            </label>
             <div class="modal-footer">
                 <button id="cancelBtn">Annuler</button>
                 <button id="okBtn">OK</button>
@@ -638,18 +1075,19 @@ if (isset($_SESSION['user_id'])) {
         const cancelBtn = document.getElementById('cancelBtn');
         const okBtn = document.getElementById('okBtn');
         const userSelect = document.getElementById('userSelect');
+        const userService = document.getElementById('userService');
 
 	const modalDelete = document.getElementById('userModalDelete');
         const cancelBtnDelete = document.getElementById('cancelBtnDelete');
         const okBtnDelete = document.getElementById('okBtnDelete');
 
 
-	function removeItem(button) {
-		const li = button.closest('li'); // Trouve le parent <li> le plus proche
-		if (li) {
-			li.remove(); // Supprime le <li>
-		}
-	}
+	//function removeItem(button) {
+	//	const li = button.closest('li'); // Trouve le parent <li> le plus proche
+	//	if (li) {
+	//		li.remove(); // Supprime le <li>
+	//	}
+	//}
 
 	function removeItemAdmin(button,user) {
 
@@ -671,6 +1109,8 @@ if (isset($_SESSION['user_id'])) {
         // Retourner l'utilisateur sélectionné sur OK
         okBtn.onclick = function () {
             const selectedUser = userSelect.value;
+	    const serviceUser = userService.checked;
+	    console.log("service : ",selectedUser," choix ",serviceUser);
 	    userToAdd = selectedUser;
             modal.style.display = 'none';
             console.log(selectedUser); // Retourne l'utilisateur sélectionné
@@ -679,35 +1119,73 @@ if (isset($_SESSION['user_id'])) {
 
 	    const userItem = document.createElement('li');
 	    const userDiv = document.createElement('div');
+	    userDiv.dataset.cowork=serviceUser;
             userDiv.classList.add('user');
 
 	    const div = document.getElementById('myDiv');
 	    const currentUser = div.getAttribute('data-param');
 	    const admin = div.getAttribute('data-admin');
 
+
 	    isAdmin = (admin == "1");
 	    if (! isAdmin)
 		    userDiv.classList.add('current-user');
 	    
+	    userList.appendChild(userItem);
+	    userItem.appendChild(userDiv);
+
+
 
 	    userDiv.textContent = userToAdd;
-	    userItem.appendChild(userDiv);
+	    if (serviceUser)
+	    {
+		    let icon = document.createElement("i");
+		    icon.className = "bi bi-people-fill"; // Ajouter les classes Bootstrap Icons
+		    icon.style.opacity = "1.0"; // Appliquer la transparence
+		    icon.style.paddingRight = "5px";  
+
+		    userDiv.prepend(icon);
+	    }
 	    //userItem.textContent = currentUser;
 	    //if (! isAdmin)
 	    {
 		    const removeButton = document.createElement('button');
 		    removeButton.innerHTML = '<i class="bi bi-trash"></i>';
-		    removeButton.className = 'action-button remove-user';
+		    removeButton.className = 'action-button remove-user e';
 						
-		    if (!isAdmin)
-			    removeButton.addEventListener('click', () => removeButton.closest('li').remove());
-		    else
-			    removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));
+		    //if (!isAdmin)
+		    //	    removeButton.addEventListener('click', () => removeButton.closest('li').remove());
+		    //else
+		    console.log("removeItemAdmin(",removeButton,userToAdd);
 			    //removeButton.addEventListener('click', () => modalDelete.style.display = 'inline');
 
+                    const contentHtml = "<button onclick=\"removeItemAdmin(this,'" + userToAdd + "')\" class=\"action-button remove-user hidden-button\"><i class=\"bi bi-trash\"></i></button>";
+		//	userDiv.innerHTML += contentHtml;
 		    userDiv.appendChild(removeButton);
+		    removeButton.setAttribute('onclick', "removeItemAdmin(this, '"+userToAdd+ "')");
+		    //removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));
 	    }
-	    userList.appendChild(userItem);
+	    //userList.appendChild(userItem);
+
+	    userDiv.parentNode.parentNode.parentNode.classList.add('cowork');
+
+	    users = userList.querySelectorAll('.user, .current-user');
+	    users.forEach(user => {
+				console.log(user);
+	    	});
+
+	    console.log("nbres d'user inscrit",users.length);
+	    const nodes = userList.querySelectorAll('[data-cowork="true"]');
+	    if (users.length > 1)
+	    {
+		    nodes.forEach(node => {
+		         const biChild = node.querySelector('.bi-people-fill');
+			 // Si un enfant avec la classe "bi" est trouvé, applique opacity: 0
+			 if (biChild) {
+				 biChild.style.opacity = '0';
+			 }
+	    	    });
+	    }
 
 	    const parentLi = addButton.closest('li');
 	    console.log(parentLi);
@@ -733,15 +1211,34 @@ if (isset($_SESSION['user_id'])) {
 		modalDelete.style.display = 'none';
 
 		const userToDelete = modalDelete.dataset.param
+		console.log("userToDelete",userToDelete);
 		const selectedElement = document.querySelector('.selected');
-		const users = selectedElement.querySelectorAll('.user');
+		const users = selectedElement.querySelectorAll('.user, .current-user');
 		users.forEach(user => 
 			{
 				if (user.textContent == userToDelete)
 				{
 					user.closest('li').remove();
 				}
+		});
+    
+		const usersB = userList.querySelectorAll('.user, .current-user');
+		users.forEach(user => {
+			console.log(user);
+	    	});
+
+		console.log("nbres d'user inscrit",users.length);
+		const nodes = userList.querySelectorAll('[data-cowork="true"]');
+		if (usersB.length == 1)
+		{
+			nodes.forEach(node => {
+		         const biChild = node.querySelector('.bi-people-fill');
+			 // Si un enfant avec la classe "bi" est trouvé, applique opacity: 0
+			 if (biChild) {
+				 biChild.style.opacity = '1';
+			 }
 			});
+		}
 		console.log("Suppresion de " + userToDelete);
         };
 
