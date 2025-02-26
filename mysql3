@@ -36,3 +36,6 @@ UPDATE users
 SET prenom = 'admin', nom = ''
 WHERE email = 'julien.montagnier@gmail.com';
 
+
+ALTER TABLE users
+ADD remember_token VARCHAR(255);

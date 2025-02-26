@@ -1,0 +1,147 @@
+
+
+/* Style de la modale */
+.modal-header {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Centrer le contenu */
+.temp_body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f8f9fa;
+}
+
+/* Espacement du bouton */
+.btn-light {
+    margin-top: 0px;
+    margin-right:5px;
+    margin-left:5px;
+}
+
+.modal-backdrop.show {
+    pointer-events: none; /* Désactive les interactions avec le backdrop */
+}
+
+
+/* Applique la couleur sélectionnée au fond du select */
+.color-dropdown {
+    background-color: white; /* Valeur par défaut */
+    color: black;
+    font-weight: bold;
+}
+
+/* Empêche le texte d'être trop collé */
+.color-dropdown option {
+    padding: 5px;
+}
+
+
+.color-picker {
+    display: flex;
+    gap: 10px; /* Espacement entre les cercles */
+}
+
+.color-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent; /* Bordure par défaut */
+    transition: transform 0.2s, border 0.2s;
+}
+
+.color-circle:hover {
+    transform: scale(1.1); /* Effet zoom au survol */
+}
+
+.color-circle.selected {
+    border: 3px solid black; /* Met en avant la couleur sélectionnée */
+}
+
+.color-select-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacement entre le cercle et le select */
+    position: relative;
+}
+
+.color-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: red; /* Couleur par défaut */
+    border: 1px solid #666;
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Style du select */
+.color-dropdown {
+    font-weight: bold;
+    background-color: white;
+    color: black;
+}
+
+/* Style des options (elles ne peuvent pas être stylisées avec CSS seul, donc on utilise JS) */
+.color-dropdown option {
+    padding: 5px;
+}
+
+.custom-select {
+    position: relative;
+    width: 200px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: white;
+    padding: 5px;
+}
+
+.selected-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px;
+}
+
+.color-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.options-list {
+    display: none; /* Caché par défaut */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.options-list li {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.options-list li:hover {
+    background: #f0f0f0;
+}
+
+.form-select{
+	width: 80%;
+}

@@ -1,8 +1,32 @@
 <?php
 
 require 'database.php'; // Connexion à la base de données
+require 'get_reservation2.php';
+
 
 session_start();
+
+
+//if (isset($_COOKIE['remember_me'])) {
+if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_me'])) {
+    $token = $_COOKIE['remember_me'];
+
+    // Rechercher l'utilisateur avec le token correspondant
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE remember_token = ?");
+    $stmt->execute([$token]);
+    $user = $stmt->fetch();
+
+    if ($user) {
+        // Token valide, démarrer une session
+        $_SESSION['user_id'] = $user['id'];
+    } else {
+        // Token invalide, supprimer le cookie
+        setcookie('remember_me', '', time() - 3600, '/');
+    }
+}
+
+
+
 try {
     // Récupérer tous les utilisateurs sauf ceux avec le rôle 'admin'
     $stmt = $pdo->prepare("SELECT id, firstname, lastname, email, phone FROM users WHERE role != 'admin'");
@@ -91,10 +115,12 @@ $timeSlots = [
     "", // Ligne vide pour l'affichage
     "15h30-17h30",
     "17h30-19h30",
-    "19h30-22h00"
+    "19h30-22h00",
+    "", // Ligne vide pour l'affichage
+    "Evenements", // Ligne vide pour l'affichage
 ];
 
-$jours=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+$jours_sem=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
 
 // Couleurs pour certaines cellules
 $highlightedCells = [
@@ -145,9 +171,18 @@ $currentUser = $_SESSION['user_abb'];
         }
         th, td {
             border: 1px solid black;
-            padding: 8px;
+            //padding: 8px;
+            padding: 2px;
 	    text-align: center;
 	    width: 12vw;
+	}
+	tr
+	{
+		height:50px;
+	}
+	.tr_inter
+	{
+		height:10px;
 	}
 	.col_1st{
 	    width: 5.5vw;
@@ -164,11 +199,13 @@ $currentUser = $_SESSION['user_abb'];
         }
         .highlight {
             background-color: #dcedc8;
-            cursor: pointer;
+	    cursor: pointer;
+            padding:1px;
         }
         .not_open {
             background-color: #ffffff;
             cursor: pointer;
+            padding:1px;
         }
         .selected {
             background-color: #aed581 !important;
@@ -191,9 +228,17 @@ $currentUser = $_SESSION['user_abb'];
             margin: 0;
             padding: 0;
             list-style-type: none;
-        }
+	}
+	#col0 {
+	    font-size: 0.8rem;
+	}
+	.col_jour {
+	    font-size: 0.8rem;
+	}
         .user-list li {
-            padding: 2px 0;
+	    //padding: 2px 0;
+	    padding: 0px 0;
+	    font-size: 0.8rem;
         }
         .action-button {
             margin-left: 10px;
@@ -242,7 +287,7 @@ $currentUser = $_SESSION['user_abb'];
         .modal {
             display: none;
             position: fixed;
-            z-index: 1;
+            z-index: 1051;
             left: 0;
             top: 0;
             width: 100%;
@@ -276,6 +321,9 @@ $currentUser = $_SESSION['user_abb'];
         .modal-footer button { margin-left: 10px; }
 
     </style>
+    <link rel="stylesheet" href="event.css"> <!-- Import du CSS personnalisé -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="db_planning_add.js"></script> <!-- Import du JS -->
     <script>
 
 	// Initialisation de la variable
@@ -345,10 +393,83 @@ $currentUser = $_SESSION['user_abb'];
 		);
 	}
 
+	function getCookie(name) {
+		const value = `; ${document.cookie}`;
+		const parts = value.split(`; ${name}=`);
+		if (parts.length === 2) return parts.pop().split(';').shift();
+	}
+
+
+	/**
+	 * Vérifie si l'utilisateur est connecté en interrogeant le serveur.
+	 * @returns {Promise<boolean>} - Une promesse qui résout à `true` si l'utilisateur est connecté, sinon `false`.
+	 */
+	async function checkIfUserIsLoggedIn() {
+		try {
+			// Envoyer une requête au serveur pour vérifier l'état de connexion
+			const response = await fetch('check-auth.php', {
+			method: 'GET',
+				credentials: 'include' // Inclure les cookies de session (si utilisés)
+		});
+
+			// Vérifier si la réponse est OK
+			if (!response.ok) {
+				throw new Error("Erreur lors de la vérification de l'état de connexion.");
+			}
+
+			// Convertir la réponse en JSON
+			const data = await response.json();
+
+			// Retourner true si l'utilisateur est connecté, sinon false
+			return data.isLoggedIn === true;
+		} catch (error) {
+			console.error("Erreur :", error);
+			return false; // En cas d'erreur, retourner false
+		}
+	}
+
+
+	function isUserLoggedIn() {
+
+
+		if (checkIfUserIsLoggedIn())
+			return true;
+
+		// Obtenir tous les cookies sous forme de chaîne
+		const cookies = document.cookie;
+
+		// Vérifier si le cookie 'remember_me' est présent
+		///const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+		console.log("cookies",cookies);
+		r = cookies.split(';').some(cookie => cookie.trim().startsWith('remember_me='));
+		if (r)
+			return true;
+
+		const sessionId = getCookie('session_id');
+		if (sessionId) {
+			console.log('Utilisateur connecté');
+			return true;
+		} else {
+			console.log('Utilisateur non connecté');
+		}
+
+		const token = localStorage.getItem('authToken'); // Récupérer le token
+		if (token) {
+			// Vérifier si le token est valide (vous pouvez décoder le JWT ou faire une requête au serveur)
+			console.log("utilisateur connecte (authToken)");
+			return true; // L'utilisateur est connecté
+		}
+		console.log("utilisateur non connecte");
+		return false; // L'utilisateur n'est pas connecté
+	}
+
 
 	//creation bouton ajouter
 	function addButtonUser(cell)
 	{
+
+		if (! isUserLoggedIn())
+			return;
 		const mydiv = document.getElementById('myDiv');
 		const currentUser = mydiv.getAttribute('data-param');
 		const connected = mydiv.getAttribute('data-connected');
@@ -397,7 +518,7 @@ $currentUser = $_SESSION['user_abb'];
 			let addButton;
 			//const addButton = document.createElement('button');
 			addButton = document.createElement('button');
-			addButton.innerHTML = '<div>Ajouterr&nbsp;&nbsp;&nbsp<i class="bi bi-clipboard-plus"></i></div>';
+			addButton.innerHTML = '<div>Ajouter&nbsp;&nbsp;&nbsp<i class="bi bi-clipboard-plus"></i></div>';
 			addButton.className = 'action-button add-user';
 			addButton.addEventListener('click', () => {
 			console.log('click current-user ajouter');
@@ -486,6 +607,7 @@ $currentUser = $_SESSION['user_abb'];
 			divItem.classList.add('current-user-add');
 			//divItem.classList.add('user');
 			liItem.appendChild(divItem);
+			liItem.classList.add('li');
 			userList.appendChild(liItem);
 		}
 		if (currentUsers.length == 0)
@@ -559,7 +681,7 @@ $currentUser = $_SESSION['user_abb'];
 
 
 			 }
-			 else if ( (event.target.classList.contains('user')) || (event.target.classList.contains('current-user')) ) 
+			 else if ( (event.target.classList.contains('user')) || (event.target.classList.contains('current-user')) || (event.target.classList.contains('li'))) 
 			 {
 				cell = event.target;
 				console.log(cell.textContent);
@@ -578,325 +700,28 @@ $currentUser = $_SESSION['user_abb'];
 				addButtonUser(parent2);
 				 
 			 }
+			 else if ( (event.target.classList.contains('user-list')) ) 
+			 {
+				cell = event.target;
+				const parent2 = cell.parentNode;
+
+				cleanSelected();
+
+				if (parent2.classList.contains('not_open'))
+					return;
+
+				// Ajouter la classe selected à la cellule cliquée
+				parent2.classList.add("selected");
+				
+				displaySelected(parent2);
+				addButtonUser(parent2);
+				 
+			 }
 		}
 
 
 	    });
 	});
-//
-//	document.addEventListener('DOMContentLoaded', () => 
-//	{
-//            const cells = document.querySelectorAll('.highlight');
-//
-//            cells.forEach(cell => {
-//                cell.addEventListener('click', () => {
-//		
-//		    if (editMode == 1)
-//                    {
-//                            cell.classList.remove("highlight");
-//                            cell.classList.add("not_open");
-//                    }
-//		    else
-//		    {
-//			    console.log('click highlight');
-//			    // Retirer la sélection des autres cellules
-//			    document.querySelectorAll('.selected').forEach(selectedCell => {
-//			    selectedCell.classList.remove('selected');
-//			    const trashButtons = selectedCell.querySelectorAll('.remove-user');
-//			    trashButtons.forEach(button => button.classList.remove('visible-button'));
-//			    trashButtons.forEach(button => button.classList.add('hidden-button'));
-//
-//			    const addButtons = selectedCell.querySelectorAll('.add-user');
-//			    addButtons.forEach(button => button.classList.remove('visible-button'));
-//			    addButtons.forEach(button => button.classList.add('hidden-button'));
-//			    });
-//
-//			    // Ajouter la classe selected à la cellule cliquée
-//			    cell.classList.add('selected');
-//			    const trashButtons = cell.querySelectorAll('.remove-user');
-//			    // affichage bouton trash
-//			    const mydiv = document.getElementById('myDiv');
-//			    const currentUser = mydiv.getAttribute('data-param');
-//			    const connected = mydiv.getAttribute('data-connected');
-//			    const admin = mydiv.getAttribute('data-admin');
-//			    isAdmin = (admin == "1") && (connected == "1");
-//
-//			    console.log('admin ',admin," connected ", connected, " isAdmin ",isAdmin);
-//			    console.log('trashButtons',trashButtons);
-//
-//			    trashButtons.forEach(button => button.classList.remove('hidden-button'));
-//			    trashButtons.forEach(button => {
-//			    // Récupérer le texte du parent de l'élément
-//			    const parentText = button.parentNode.textContent.trim();
-//			    // Vérifier si admin est égal à 1 ou si le texte du parent est 'user'
-//			    if ((isAdmin) || (parentText === currentUser)) {
-//				    button.classList.add('visible-button');
-//				    console.log("set button " + parentText + " visible");
-//			    }
-//			    else
-//			    {
-//				    console.log("set button " + parentText + " hidden");
-//				    button.classList.add('hidden-button');
-//			    }
-//			    });
-//
-//			    //creation bouton ajouter
-//			    const addButtons = cell.querySelectorAll('.add-user');
-//			    console.log('click highlight, addButton = ',addButtons.length);
-//			    const userLists = cell.querySelectorAll('.user-list');
-//			    const currentUsers = cell.querySelectorAll('.current-user');
-//			    console.log('click highlight, userLists = ',userLists.length);
-//			    if (userLists.length == 1)
-//				    userList = userLists[0];
-//
-//			    let users_yet = [];
-//			    let users_all = <?php echo json_encode($users); ?>;
-//			    const users = cell.querySelectorAll('.user, .current-user');
-//			    users.forEach(user => {
-//			    users_yet.push(user.textContent);
-//			    console.log(user.textContent); // Affiche le contenu texte de chaque utilisateur
-//			    });
-//			    const availableUsers = users_all.filter(user => !users_yet.includes(user));
-//
-//			    console.log("users :");
-//			    console.log(users);
-//
-//			    console.log("users_yet :");
-//			    console.log(users_yet);
-//
-//			    console.log("available users :");
-//			    console.log(availableUsers); // Affiche le contenu texte de chaque utilisateur
-//
-//
-//
-//			    //const userList = event.target.closest('.user-list');
-//			    if ((addButtons.length == 0) &&  (userLists.length == 1) && (availableUsers.length >0))
-//			    {
-//				    console.log("creation du bouton ajouter");
-//				    let addButton;
-//				    //const addButton = document.createElement('button');
-//				    addButton = document.createElement('button');
-//				    addButton.innerHTML = '<div>Ajouterr&nbsp;&nbsp;&nbsp<i class="bi bi-clipboard-plus"></i></div>';
-//				    addButton.className = 'action-button add-user';
-//				    addButton.addEventListener('click', () => {
-//				    console.log('click current-user ajouter');
-//				    const mydiv = document.getElementById('myDiv');
-//				    const currentUser = mydiv.getAttribute('data-param');
-//				    const connected = mydiv.getAttribute('data-connected');
-//				    const admin = mydiv.getAttribute('data-admin');
-//				    isAdmin = (admin == "1") && (connected == "1");
-//				    let users_yet = [];
-//				    let users_all = <?php echo json_encode($users); ?>;
-//				    if (connected == "1") {
-//					    console.log("connectec = 1");
-//					    const selectedElement = document.querySelector('.selected');
-//					    if (selectedElement) {
-//						    // Récupère toutes les balises avec la classe "user" à l'intérieur de l'élément sélectionné
-//						    const users = selectedElement.querySelectorAll('.user');
-//
-//						    // Affiche chaque utilisateur trouvé dans la console
-//						    console.log("build users_yet");
-//						    users.forEach(user => {
-//						    users_yet.push(user.textContent);
-//						    console.log(user.textContent); // Affiche le contenu texte de chaque utilisateur
-//						    });
-//					    }
-//					    const availableUsers = users_all.filter(user => !users_yet.includes(user));
-//
-//					    console.log("users :");
-//					    console.log(users);
-//
-//					    console.log("users_yet :");
-//					    console.log(users_yet);
-//
-//					    console.log("available users :");
-//					    console.log(availableUsers); // Affiche le contenu texte de chaque utilisateur
-//
-//					    const combo_liste = document.getElementById('userSelect');
-//					    const users_list = combo_liste.querySelectorAll('.user-poplist');
-//					    console.log("MAJ users poplist ");
-//					    users_list.forEach(user => {
-//					    if (availableUsers.includes(user.textContent))
-//					    {
-//						    user.classList.remove("hidden-option");
-//						    user.classList.add("visible-option");
-//						    console.log("users poplist "+user.textContent + " set visible");
-//					    }
-//					    else
-//					    {
-//						    user.classList.remove("visible-option");
-//						    user.classList.add("hidden-option");
-//						    console.log("users poplist "+user.textContent + " set hidden");
-//					    }
-//					    });
-//
-//					    const visibleOption = Array.from(combo_liste.options).find(option => {
-//					    return window.getComputedStyle(option).display !== "none"; // Vérifie le style calculé
-//					    });
-//
-//					    // Définir cet élément comme sélectionné
-//					    if (visibleOption) {
-//						    visibleOption.selected = true;
-//					    }
-//
-//
-//					    const modal = document.getElementById('userModal');
-//					    modal.style.display = 'block';
-//				    }
-//				    else if (0 == 1)// todelete
-//				    {
-//					    const userItem = document.createElement('li');
-//					    const userDiv = document.createElement('div');
-//
-//
-//					    userDiv.classList.add('user');
-//					    userDiv.classList.add('current-user');
-//					    userToAdd = currentUser;
-//
-//					    userDiv.textContent = userToAdd;
-//					    userItem.appendChild(userDiv);
-//					    //userItem.textContent = currentUser;
-//					    const removeButton = document.createElement('button');
-//					    removeButton.innerHTML = '<i class="bi bi-trash"></i>';
-//					    removeButton.className = 'action-button remove-user';
-//
-//					    const mydiv = document.getElementById('myDiv');
-//					    const currentUser = mydiv.getAttribute('data-param');
-//					    const admin = mydiv.getAttribute('data-admin');
-//					    isAdmin = (admin == "1");
-//					    //if (!isAdmin)
-//					    //	removeButton.addEventListener('click', () => removeButton.closest('li').remove());
-//					    //else
-//					    //	removeButton.addEventListener('click', () => modalDelete.style.display = 'inline');
-//					    //removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));
-//					    //userItem.appendChild(removeButton);
-//					    userDiv.appendChild(removeButton);
-//					    userList.appendChild(userItem);
-//					    addButton.classList.remove('visible-button');
-//					    addButton.classList.add('hidden-button');
-//					    removeButton.setAttribute('onclick', "removeItemAdmin(this, '"+userToAdd+ "')");
-//					    //removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));
-//					    //addButton.style.visibility='hidden';
-//					    //addButton.remove();
-//				    }
-//				    });
-//				    addButton.classList.remove('visible-button');
-//				    addButton.classList.add('hidden-button');
-//				    const liItem = document.createElement('li');
-//				    const divItem = document.createElement('div');
-//				    divItem.appendChild(addButton);
-//				    divItem.classList.add('current-user-add');
-//				    //divItem.classList.add('user');
-//				    liItem.appendChild(divItem);
-//				    userList.appendChild(liItem);
-//			    }
-//			    if (currentUsers.length == 0)
-//			    {
-//				    const addButtons = userList.querySelectorAll('.add-user');//[0];
-//				    if (addButtons.length >0)
-//				    {
-//					    addButton = addButtons[0];
-//					    addButton.classList.remove('hidden-button');
-//					    addButton.classList.add('visible-button');
-//				    }
-//			    }
-//		    }
-//                });
-//            });
-//
-//            document.body.addEventListener('click', (event) => {
-//                if (event.target.classList.contains('current-user')) {
-//	            const parent = event.target.parentElement;
-//                    if ( !parent.classList.contains('selected'))
-//                    {
-//			return;
-//                    }
-//                    const userList = event.target.closest('.user-list');
-//                    const addButtons = event.target.querySelectorAll('.add-user');
-//                    console.log('click highlight avec current-user, addButton',addButtons.length);
-//                    if (addButtons.length == 0)
-//		    {
-//                        const addButton = document.createElement('button');
-//                        addButton.textContent = 'Ajouter';
-//                        addButton.className = 'action-button add-user';
-//                        addButton.addEventListener('click', () => {
-//                        	console.log('click current-user ajouter');
-//    		         	const userItem = document.createElement('li');
-//    			        const userDiv = document.createElement('div');
-//        
-//        			const mydiv = document.getElementById('myDiv');
-//        			const currentUser = mydiv.getAttribute('data-param');
-//        			const admin = mydiv.getAttribute('data-admin');
-//        
-//        			userDiv.classList.add('current-user');
-//    				userDiv.textContent = currentUser;
-//   	 			userItem.appendChild(userDiv);
-//    				const removeButton = document.createElement('button');
-//    				removeButton.innerHTML = '<i class="bi bi-trash"></i>';
-//				removeButton.className = 'action-button remove-user';
-//				isAdmin = (admin == "1");
-//				//if (!isAdmin)
-//				//	removeButton.addEventListener('click', () => removeButton.closest('li').remove());
-//				//else			
-//				//	removeButton.addEventListener('click', () => modalDelete.style.display = 'inline');
-//				removeButton.addEventListener('click', () => removeItemAdmin(removeButton,currentUser));
-//    				userDiv.appendChild(removeButton);
-//    				userList.appendChild(userItem);
-//    				addButton.classList.remove('visible-button');
-//    				addButton.classList.add('hidden-button');
-//    			});
-//			userList.appendChild(addButton);
-//			console.log("ajout du bouton ajouter depuis current-user");
-//    		    }
-//                    event.target.closest('li').remove();
-//                }
-//            });
-//
-//
-//            document.body.addEventListener('click', (event) => {
-//                if (event.target.classList.contains('remove-user')) {
-////                    const userList = event.target.closest('.user-list');
-////                    const addButton = document.createElement('button');
-////                    addButton.textContent = 'Ajouter';
-////                    addButton.className = 'action-button add-user';
-////                    addButton.addEventListener('click', () => {
-////                        const userItem = document.createElement('li');
-////                        userItem.textContent = 'user1';
-////                        const removeButton = document.createElement('button');
-////                        removeButton.inn	erHTML = '<i class="bi bi-trash"></i>';
-////                        removeButton.className = 'action-button remove-user';
-////                        removeButton.addEventListener('click', () => 
-////			{
-////                           removeButton.closest('li').remove()
-////                           addButton.classList.remove('hidden-button');
-////			   addButton.classList.add('visible-button');
-////			});
-////                        userItem.appendChild(removeButton);
-////                        userList.appendChild(userItem);
-////			addButton.classList.remove('visible-button');
-////			addButton.classList.add('hidden-button');
-////                    });
-////                    userList.appendChild(addButton);
-//                    event.target.closest('li').remove();
-//                }
-//            });
-//	}
-//	);
-//
-//	document.addEventListener('DOMContentLoaded', () => {
-//               const cells = document.querySelectorAll('.not_open');
-//            
-//               cells.forEach(cell => {
-//                        cell.addEventListener('click', () => {
-//                        if (editMode == 1)
-//                        {
-//                            cell.classList.remove("not_open");
-//                            cell.classList.add("highlight");
-//                        }
-//            	    });
-//            	});
-//        
-//        });
 
 
     </script>
@@ -927,68 +752,120 @@ if (isset($_SESSION['user_id'])) {
         <thead>
             <tr>
                 <th class="col_1st">#</th>
-                <?php
+		<?php
+		$list_days=array();
                 foreach ($daysOfWeek as $index => $day) {
                     $dtime = DateTime::createFromFormat('d-m-Y', $day);
                     $class = ($day === $currentDate) ? "today" : "";
-                    echo "<th class='$class col_jour'>" . $jours[$dtime->format('w')] . "<br>" . $day . "</th>";
+		    echo "<th class='$class col_jour'>" . $jours[$dtime->format('w')] . "<br>" . $day . "</th>";
+		    $list_days[]=$day;
                 }
                 ?>
             </tr>
         </thead>
         <tbody>
-            <?php
-            foreach ($timeSlots as $index => $timeSlot) {
-                echo "<tr id=\"$timeSlot\">";
-                echo "<td id=\"col0\">" . $timeSlot . "</td>";
-                for ($col = 0; $col < 7; $col++) {
-                    $jour = $jours[$col];
-                    $cellClass = "not_open";
-                    foreach ($highlightedCells as $highlight) {
-                        if ($highlight["day"] == $col && in_array($timeSlot, $highlight["times"])) {
-                            $cellClass = "highlight";
-                            break;
-                        }
-                    }
-                    if ($timeSlot === "") {
-                        echo "<td class=\"col_jour\"></td>"; // Cellules vides pour les lignes sans plages horaires
-                    } else {
-                        // Sélectionner 3 utilisateurs au hasard
-                        $randomUsers = array_slice($users, rand(0, count($users) - 3), 3);
-                        $randomUsers = array_slice($users, rand(0, count($users) - 3), rand(0,count($users)));
-                        echo "<td id=\"$jour\" class='$cellClass col_jour'>";
-                        if ($cellClass === "highlight") {
-                            echo "<ul class='user-list'>";
-                            foreach ($randomUsers as $user) {
-				$isAdmin = $admin;
-                                if ($user == $currentUser) {
-                                    echo "<li><div data-cowork=\"false\" class=\"current-user\">$user";
-                                    echo "<button onclick=\"removeItemAdmin(this,'" .$user . "')\" class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
-                                    echo "</div>";
-                                }
-				elseif ($isAdmin) {
-                                    echo "<li><div  data-cowork=\"false\" class=\"user\">$user";
-                                    //echo "<button onclick=\"removeItemAdmin(this)\"  class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
-                                    echo "<button onclick=\"removeItemAdmin(this,'" .$user . "')\"  class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
-                                    echo "</div>";
-                                }
-				else
-				{
-                                    echo "<li><div  data-cowork=\"false\" class=\"user\">$user";
-                                    echo "</div>";
-				}
-                                echo "</li>";
-                            }
-                            echo "</ul>";
-			}
+        <?php
+		foreach ($timeSlots as $index => $timeSlot) 
+		{
+			$plage_resa="$timeSlot";
+			if ($timeSlot=="")
+				echo "<tr class=\"tr_inter\">";
 			else
-                            echo "<ul class='user-list'></ul>";
-                        echo "</td>";
-                    }
-                }
-                echo "</tr>";
-            }
-            ?>
+				echo "<tr id=\"$timeSlot\">";
+			echo "<td id=\"col0\">" . $timeSlot . "</td>";
+			for ($col = 0; $col < 7; $col++) 
+			{
+				$jour = $jours_sem[$col];
+				$cellClass = "not_open";
+				foreach ($highlightedCells as $highlight) 
+				{
+					if ($highlight["day"] == $col && in_array($timeSlot, $highlight["times"])) 
+					{
+						$cellClass = "highlight";
+						break;
+					}
+				}
+				if ($timeSlot === "") 
+				{
+					echo "<td class=\"col_jour\"></td>"; // Cellules vides pour les lignes sans plages horaires
+				}
+				else 
+				{
+					// Sélectionner 3 utilisateurs au hasard
+					$date_resa="$list_days[$col]";
+					$reservations = getReservations($date_resa, $plage_resa, $pdo_planning);
+					$users_resa=[];
+					$cowork_resa=[];
+					if (!empty($reservations)) 
+					{
+						foreach ($reservations as $res) 
+						{
+							$users_resa[]=$res['id'];
+							$cowork_resa[]=$res['cowork'];
+						}
+						$cellClass = "highlight";
+					}
+					//$randomUsers = array_slice($users, rand(0, count($users) - 3), 3);
+					//$randomUsers = array_slice($users, rand(0, count($users) - 3), rand(0,count($users)));
+					//echo "<td id=\"$jour-$list_days[$col]\" class='$cellClass col_jour'>";
+					echo "<td id=\"$date_resa\" class='$cellClass col_jour'>";
+					if ($cellClass === "highlight") 
+					{
+						echo "<ul class='user-list'>";
+						//foreach ($randomUsers as $user)
+						$c = 0;
+						$opacity = 0;
+						foreach ($users_resa as $user) 
+						{
+							$opacity = $opacity + $cowork_resa[$c];
+						}
+						if ($opacity > 1)
+							$opacity = 0;
+						else
+							$opacity = 1;
+						$c = 0;
+						foreach ($users_resa as $user) 
+						{
+							$isAdmin = $admin;
+							$cowork = (bool) $cowork_resa[$c];
+							$cowork_html = "";
+							if ($cowork ==1)
+							{
+								$cowork = "true";
+								$cowork_html = "<i class=\"bi bi-people-fill\" style=\"opacity: $opacity; padding-right: 5px;\"></i>";
+							}
+							else
+								$cowork = "false";
+							if ($user == $currentUser) 
+							{
+								echo "<li class=\"li\"><div data-cowork=\"$cowork\" class=\"current-user\">$cowork_html$user";
+								echo "<button onclick=\"removeItemAdmin(this,'" .$user . "')\" class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
+								echo "</div>";
+							}
+							elseif ($isAdmin) 
+							{
+								echo "<li  class=\"li\"><div  data-cowork=\"$cowork\" class=\"user\">$cowork_html$user";
+								echo "<button onclick=\"removeItemAdmin(this,'" .$user . "')\"  class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
+								echo "</div>";
+							}
+							else
+							{
+								echo "<li class=\"li\"><div  data-cowork=\"$cowork\" class=\"user\">$cowork_html$user";
+								echo "</div>";
+							}
+							echo "</li>";
+							$c=$c+1;
+						}
+						echo "</ul>";
+					}
+					else
+						echo "<ul class='user-list'></ul>";
+					echo "</td>";
+				}
+			}
+			echo "</tr>";
+		}
+       ?>
         </tbody>
     </table>
 
@@ -999,34 +876,47 @@ if (isset($_SESSION['user_id'])) {
         if ($_SESSION["user_role"] == "admin")
 	   echo " (admin) " ;
     echo "- <a href=\"logout.php\">Déconnexion</a>";
-    echo "- <a href=\"#\" id=\"toggleEditMode\" >Edit mode</a></p>";
+	if ($_SESSION["user_role"] == "admin")
+	{
+		//echo "- <a href=\"#\" onclick=\"cleanSelected()\" id=\"toggleEditMode\" >Edit mode</a> - ";
+		echo "<button class=\"btn btn-light\" onclick=\"cleanSelected()\" id=\"toggleEditMode\" >Edit mode</button>";
+    		echo "<button class=\"btn btn-light\" onclick=\"openModal()\">Créer un événement</button></p>";
+	}
 } else {
     echo "<p align=\"center\">Accès en lecture seul, veuillez vous <a href=\"login2.php\">connecter</a></p>";
 
 }
 ?>
+
 	<script>
         // Récupération du lien par son ID
-        const link = document.getElementById('toggleEditMode');
+	var link = document.getElementById('toggleEditMode');
 
-        // Ajout d'un écouteur d'événement pour le clic sur le lien
-        link.addEventListener('click', function(event) {
-            // Empêcher le comportement par défaut du lien
-            event.preventDefault();
+	if (link)
+	{
 
-            // Toggle la variable entre 0 et 1
-            editMode = editMode === 0 ? 1 : 0;
+		// Ajout d'un écouteur d'événement pour le clic sur le lien
+		link.addEventListener
+		(	'click', function(event) 
+			{
+				// Empêcher le comportement par défaut du lien
+				event.preventDefault();
 
-            // Changer le texte du lien en fonction de la valeur de la variable
-            if (editMode === 1) {
-                link.textContent = 'Désactiver Edit Mode';
-            } else {
-                link.textContent = 'Activer Edit Mode';
-            }
+				// Toggle la variable entre 0 et 1
+				editMode = editMode === 0 ? 1 : 0;
 
-            // Afficher la valeur de la variable dans la console (pour le débogage)
-            console.log('editMode:', editMode);
-        });
+				// Changer le texte du lien en fonction de la valeur de la variable
+				if (editMode === 1) {
+					link.textContent = 'Désactiver Edit Mode';
+				} else {
+					link.textContent = 'Activer Edit Mode';
+				}
+
+				// Afficher la valeur de la variable dans la console (pour le débogage)
+				console.log('editMode:', editMode);
+			}
+		);
+	}
 
 
 
@@ -1069,6 +959,12 @@ if (isset($_SESSION['user_id'])) {
             </div>
         </div>
     </div>
+    
+	<!-- Conteneur où la modale sera chargée -->
+    <div id="modalContainer">
+    </div>
+
+    <!--?php include "event.php" ?-->
 
     <script>
         const modal = document.getElementById('userModal');
@@ -1134,7 +1030,18 @@ if (isset($_SESSION['user_id'])) {
 	    userList.appendChild(userItem);
 	    userItem.appendChild(userDiv);
 
-
+	    tr = userList.closest("tr");
+	    td = userList.closest("td");
+	    console.log("saving db ",selectedUser,tr.id,td.id);
+	    plage_resa = tr.id;
+	    date_resa = td.id;
+	    detail_resa = "";
+	    cowork_resa = serviceUser;
+	    nom_resa = "";
+	    prenom_resa = "";
+	    id_resa = selectedUser;
+	    ajouterReservation(date_resa, plage_resa, id_resa, nom_resa, prenom_resa, cowork_resa, detail_resa);
+	    console.log("save ok");
 
 	    userDiv.textContent = userToAdd;
 	    if (serviceUser)
@@ -1146,98 +1053,118 @@ if (isset($_SESSION['user_id'])) {
 
 		    userDiv.prepend(icon);
 	    }
-	    //userItem.textContent = currentUser;
-	    //if (! isAdmin)
-	    {
-		    const removeButton = document.createElement('button');
-		    removeButton.innerHTML = '<i class="bi bi-trash"></i>';
-		    removeButton.className = 'action-button remove-user e';
+	    const removeButton = document.createElement('button');
+	    removeButton.innerHTML = '<i class="bi bi-trash"></i>';
+	    removeButton.className = 'action-button remove-user e';
 						
-		    //if (!isAdmin)
-		    //	    removeButton.addEventListener('click', () => removeButton.closest('li').remove());
-		    //else
-		    console.log("removeItemAdmin(",removeButton,userToAdd);
-			    //removeButton.addEventListener('click', () => modalDelete.style.display = 'inline');
+	    console.log("removeItemAdmin(",removeButton,userToAdd);
+	    //removeButton.addEventListener('click', () => modalDelete.style.display = 'inline');
 
-                    const contentHtml = "<button onclick=\"removeItemAdmin(this,'" + userToAdd + "')\" class=\"action-button remove-user hidden-button\"><i class=\"bi bi-trash\"></i></button>";
-		//	userDiv.innerHTML += contentHtml;
-		    userDiv.appendChild(removeButton);
-		    removeButton.setAttribute('onclick', "removeItemAdmin(this, '"+userToAdd+ "')");
-		    //removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));
-	    }
-	    //userList.appendChild(userItem);
+	    const contentHtml = "<button onclick=\"removeItemAdmin(this,'" + userToAdd + "')\" class=\"action-button remove-user hidden-button\"><i class=\"bi bi-trash\"></i></button>";
+	    //	userDiv.innerHTML += contentHtml;
+	    userDiv.appendChild(removeButton);
+	    removeButton.setAttribute('onclick', "removeItemAdmin(this, '"+userToAdd+ "')");
+	    //removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));
 
 	    userDiv.parentNode.parentNode.parentNode.classList.add('cowork');
 
 	    users = userList.querySelectorAll('.user, .current-user');
-	    users.forEach(user => {
+	    users.forEach
+            (
+		    user => 
+	    	    {
 				console.log(user);
-	    	});
+	    	    }
+	    );
 
 	    console.log("nbres d'user inscrit",users.length);
 	    const nodes = userList.querySelectorAll('[data-cowork="true"]');
 	    if (users.length > 1)
 	    {
-		    nodes.forEach(node => {
-		         const biChild = node.querySelector('.bi-people-fill');
-			 // Si un enfant avec la classe "bi" est trouvé, applique opacity: 0
-			 if (biChild) {
-				 biChild.style.opacity = '0';
-			 }
-	    	    });
+		    nodes.forEach
+	            (
+			    node => 
+	                    {
+				    const biChild = node.querySelector('.bi-people-fill');
+				    // Si un enfant avec la classe "bi" est trouvé, applique opacity: 0
+				    if (biChild) 
+				    {
+					    biChild.style.opacity = '0';
+				    }
+	    		    }
+		    );
 	    }
 
 	    const parentLi = addButton.closest('li');
 	    console.log(parentLi);
 	    console.log(parentLi.textContent);
 	    parentLi.remove();
-	    //addButton.classList.remove('visible-button');
-	    //addButton.classList.add('hidden-button');
-
-
-
         };
 	
 
         // Fermer la modale sur Annuler
-        cancelBtnDelete.onclick = function () {
+	cancelBtnDelete.onclick = function () 
+	{
             modalDelete.style.display = 'none';
             console.log(null); // Retourne null
         };
 
         // Retourner l'utilisateur sélectionné sur OK
-        okBtnDelete.onclick = function () {
+	okBtnDelete.onclick = function () 
+	{
 
 		modalDelete.style.display = 'none';
 
 		const userToDelete = modalDelete.dataset.param
 		console.log("userToDelete",userToDelete);
+		
 		const selectedElement = document.querySelector('.selected');
+		
+		tr = selectedElement.closest("tr");
+		td = selectedElement.closest("td");
+		console.log("REMOVE ",userToDelete,tr.id,td.id);
+		plage_resa = tr.id;
+		date_resa = td.id;
+		id_resa = userToDelete;
+		deleteReservation(date_resa,plage_resa,id_resa);
+
+
 		const users = selectedElement.querySelectorAll('.user, .current-user');
-		users.forEach(user => 
+		users.forEach
+		(
+			user => 
 			{
 				if (user.textContent == userToDelete)
 				{
 					user.closest('li').remove();
 				}
-		});
+			}
+		);
     
 		const usersB = userList.querySelectorAll('.user, .current-user');
-		users.forEach(user => {
-			console.log(user);
-	    	});
+		users.forEach
+		(
+			user => 
+			{
+				console.log(user);
+	    		}
+		);
 
 		console.log("nbres d'user inscrit",users.length);
 		const nodes = userList.querySelectorAll('[data-cowork="true"]');
 		if (usersB.length == 1)
 		{
-			nodes.forEach(node => {
-		         const biChild = node.querySelector('.bi-people-fill');
-			 // Si un enfant avec la classe "bi" est trouvé, applique opacity: 0
-			 if (biChild) {
-				 biChild.style.opacity = '1';
-			 }
-			});
+			nodes.forEach
+			(
+				node => 
+				{
+					const biChild = node.querySelector('.bi-people-fill');
+					// Si un enfant avec la classe "bi" est trouvé, applique opacity: 0
+					if (biChild) {
+						biChild.style.opacity = '1';
+					}
+				}
+			);
 		}
 		console.log("Suppresion de " + userToDelete);
         };
@@ -1251,10 +1178,12 @@ if (isset($_SESSION['user_id'])) {
             else if (event.target === modalDelete) {
                 modalDelete.style.display = 'none';
             }
-        };
-        
+	};
+
 
     </script>
+    <!--script src="event.js" defer></script--> <!-- Import du JS -->
+    <script src="event.js"></script> <!-- Import du JS -->
 
 </body>
 </html>

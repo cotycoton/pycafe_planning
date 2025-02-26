@@ -77,7 +77,10 @@ if (isset($_SESSION['user_id'])) {
         	<input type="password" id="password" name="password" placeholder="Mot de passe" required>
         	<br>
         	<input type="checkbox" id="showPassword">
-        	<label for="showPassword">Afficher le mot de passe</label>
+		<label for="showPassword">Afficher le mot de passe</label>
+                <label>
+                    <input type="checkbox" name="remember_me"> Se souvenir de moi
+                 </label>
         	<br>
         	<button type="submit">Se connecter</button>
     	</form>
