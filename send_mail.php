@@ -16,15 +16,19 @@ function sendMail($to, $subject, $message) {
     try {
         // Configuration du serveur SMTP Gmail
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = 'epicerie.besayes@gmail.com'; // Remplacez par votre email Gmail
-        $mail->Password = 'epic@fe2024!'; // Remplacez par votre mot de passe Gmail ou App Password
+	
+	$mail->Host = 'smtp-relay.brevo.com'; // Remplacez par votre serveur SMTP
+        $mail->Username = '8626ec001@smtp-brevo.com'; // Remplacez par votre email
+        $mail->Password = 'nGkz8EDJIFSdZP5b'; // Remplacez par votre mot de passe SMTP
+	
+	$mail->SMTPAuth = true;
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
+	$mail->Port = 587;
+
+
         
         // Destinataires
-        $mail->setFrom('epicerie.besayes@gmail.com', 'support planning');
+        $mail->setFrom('epicafe.besayes@gmail.com', 'Support');
         $mail->addAddress($to);
         
         // Contenu du mail

@@ -23,7 +23,11 @@ if (isset($_SESSION['user_id'])) {
             background: url('Epicafe_logo.png') no-repeat center center fixed;
             background-size: contain;
         }
-
+	h2
+	{
+		margin : 5px;
+		margin-bottom:10px;
+	}
         body::before {
             content: "";
             position: absolute;
@@ -48,15 +52,23 @@ if (isset($_SESSION['user_id'])) {
         input {
             display: block;
 	    width: 90%;
-            margin: 10px 0;
-            padding: 10px;
+            margin: 5px 0;
+            padding: 8px;
             border: 1px solid #ccc;
             border-radius: 5px;
-        }
+	}
+	
+	.div_label
+	{
+		margin:5px;
+		display:inline-block;
+		width:90%;
+	}
         button {
             background-color: #28a745;
             color: white;
             padding: 10px 15px;
+            margin: 10px 15px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -71,16 +83,20 @@ if (isset($_SESSION['user_id'])) {
 </head>
 <body>
     <div class="login-container">
-        <h2>Connexion Planning</h2>
+        <h2>Connexion planning Epicafé</h2>
     	<form action="login_process.php" method="POST">
         	<input type="text" name="email" placeholder="Email" required><br>
         	<input type="password" id="password" name="password" placeholder="Mot de passe" required>
-        	<br>
-        	<input type="checkbox" id="showPassword">
-		<label for="showPassword">Afficher le mot de passe</label>
-                <label>
-                    <input type="checkbox" name="remember_me"> Se souvenir de moi
+		<br>
+		<div class="div_label">
+		<label for="showPassword">Afficher le mot de passe
+		<input style="display:inline-block;width:10%;" type="checkbox" id="showPassword">
+		</label>
+		</div>
+		<div class="div_label"">
+                <label> Se souvenir de moi <input style="display:inline-block;width:10%;" type="checkbox" name="remember_me">
                  </label>
+		</div>
         	<br>
         	<button type="submit">Se connecter</button>
     	</form>

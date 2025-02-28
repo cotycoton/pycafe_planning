@@ -40,7 +40,6 @@ async function ajouterReservation(date, plage, id, nom, prenom, cowork, commenta
 
 async function getReservations(date, plage) {
     const url = `get_reservation.php?date=${encodeURIComponent(date)}&plage=${encodeURIComponent(plage)}`;
-    console.log("getReservations",date,plage);
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -92,5 +91,16 @@ function deleteReservation(date, plage, id) {
 //    }
 //});
 
+
+function enregistrerEtat(date, plageHoraire, etat) {
+    fetch('db_save_etat.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: date, plage_horaire: plageHoraire, etat: etat })
+    })
+    .then(response => response.json())
+    .then(data => console.log(data.message))
+    .catch(error => console.error('Erreur:', error));
+}
 
 

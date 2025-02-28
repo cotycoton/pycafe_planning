@@ -1,6 +1,4 @@
 
-
-
 <?php
 require 'database.php';
 ?>
@@ -37,13 +35,17 @@ require 'database.php';
             width: 100%;
             height: 100%;
             background: white; /* Couleur blanche */
-            opacity: 0.7; /* Ajuste la clarté (0 = invisible, 1 = opaque) */
+            opacity: 0.3; /* Ajuste la clarté (0 = invisible, 1 = opaque) */
             z-index: -1;
         }
-
+	h2
+	{
+		margin : 5px;
+		margin-bottom:10px;
+	}
         .register-container {
             background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
+            padding: 10px;
             border-radius: 10px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
             text-align: center;
@@ -54,9 +56,10 @@ require 'database.php';
             display: block;
             width: 90%;
             margin: 10px 0;
-            padding: 10px;
+            padding: 5px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            opacity: 0.5; /* Ajuste la clarté (0 = invisible, 1 = opaque) */
         }
         button {
             background-color: #007bff;
@@ -102,7 +105,7 @@ require 'database.php';
             <input type="text" name="firstname" placeholder="Prénom" required>
             <input type="text" name="lastname" placeholder="Nom" required>
             <input type="email" name="email" placeholder="Adresse email" required>
-            <input type="text" name="phone" placeholder="Numéro de téléphone" required>
+            <input type="text" name="phone" placeholder="Numéro de téléphone" optional>
             <input type="password" id="password" name="password" placeholder="Mot de passe" required>
             <input type="password" id="confirm_password" placeholder="Confirmez le mot de passe" required>
             <p id="error" class="error"></p>

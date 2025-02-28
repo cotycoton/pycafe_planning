@@ -1,4 +1,3 @@
-
 <?php
 // Paramètres de connexion
 $host = "localhost";

@@ -1,11 +1,15 @@
 <?php
 
 require 'database.php'; // Connexion à la base de données
-require 'get_reservation2.php';
+require 'get_reservation.php';
+require 'get_ouverture.php';
 
 
 session_start();
 
+include 'calendar4.php';
+
+setlocale(LC_TIME, 'fr_FR.UTF-8', 'fr_FR', 'fr'); // Définit la langue en français
 
 //if (isset($_COOKIE['remember_me'])) {
 if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_me'])) {
@@ -105,6 +109,11 @@ for ($i = 0; $i < 7; $i++) {
     $year=$week_day->format('Y');
     $daysOfWeek[] = $day;
     $week=$week_day->format('W');
+    if ($i == 0)
+    {
+	$year_d0=$year;
+	$month_d0=$week_day->format('m');
+    }
 }
 
 // Plages horaires
@@ -161,12 +170,15 @@ $currentUser = $_SESSION['user_abb'];
     <style>
 	h1, h2 {
 		text-align: center;
-
+		font-size:1.8rem;
+		display:flex;
+ 		align-items: center;
+		justify-content:center;
         } 
         table {
             border-collapse: collapse;
             width: 100%;
-	    margin: 20px auto;
+	    margin: 5px auto;
 	    //table-layout: fixed;
         }
         th, td {
@@ -178,19 +190,58 @@ $currentUser = $_SESSION['user_abb'];
 	}
 	tr
 	{
-		height:50px;
+		height:30px;
 	}
 	.tr_inter
 	{
 		height:10px;
+	}   
+
+	.calendrier tr
+	{
+		height:15px;
 	}
+        .calendrier {
+            width: 100px;
+            table-layout: fixed;
+            border-collapse: collapse;
+	    font-size:0.8rem;
+        }
+        
+        .calendrier td, .calendrier th {
+            width: 28px; /* 100% / 7 colonnes */
+            height: 5px; /* Hauteur fixe des cellules */
+	    text-align: center;
+	    font-size:0.8rem;
+            border: 1px solid black;
+        }
+        .calendrier table {
+            border-collapse: collapse;
+            width: 100%;
+	    margin: 0px auto;
+        }
+
 	.col_1st{
 	    width: 5.5vw;
 	}
 	.col_jour{
 	    width: 13.5vw;
 	}
-	
+	.delete
+	{
+	    padding:5px;
+	    text-decoration: none;
+	    font-size: 14px;
+	    font-weight:normal;
+	}
+	.deleteL
+	{
+	    padding:5px;
+	    padding-left:20px;
+	    text-decoration: none;
+	    font-size: 14px;
+	    font-weight:normal;
+	}	
         .cowork {
 	}
 
@@ -213,12 +264,17 @@ $currentUser = $_SESSION['user_abb'];
         .nav-arrows {
             display: flex;
             justify-content: space-between;
-            margin: 20px;
+	    align-items: center;
+            margin: 10px;
+	    margin-top:2px;
+	    width:100%;   
         }
         .nav-arrows a {
             text-decoration: none;
             font-size: 24px;
             color: #000;
+            margin-left: 20px;
+            margin-right: 20px;
         }
         .today {
             background-color: #4caf50 !important;
@@ -241,7 +297,7 @@ $currentUser = $_SESSION['user_abb'];
 	    font-size: 0.8rem;
         }
         .action-button {
-            margin-left: 10px;
+            margin-left: 5px;
             background-color: transparent;
             border: none;
             cursor: progress;
@@ -259,14 +315,18 @@ $currentUser = $_SESSION['user_abb'];
             background-color: #fff59d;
             border-radius: 4px;
         }
-
-        .current-user {
-            font-weight: bold;
+        .current-user, .user {
+	    padding: 2px 2px;
+	    margin-left:2px;
+	    margin-right:2px;
+            border-radius: 4px;
+	}
+	.current-user
+	{
             color: #007bff;
             background-color: #fff59d;
-            padding: 2px 4px;
-            border-radius: 4px;
-        }
+            font-weight: bold;
+	}
         .hidden-button {
             //visibility: hidden;
             display: none;
@@ -316,7 +376,7 @@ $currentUser = $_SESSION['user_abb'];
             border: 1px solid #888;
             width: 350px;
         }
-        .modal-header { font-weight: bold; margin-bottom: 15px; }
+        .modal-header { font-weight: bold; margin-bottom: 15px; display:block;}
         .modal-footer { margin-top: 15px; text-align: right; }
         .modal-footer button { margin-left: 10px; }
 
@@ -633,17 +693,23 @@ $currentUser = $_SESSION['user_abb'];
 		console.log(event.target.classList);
 		if (editMode == 1)
 		{
-			console.log('Cellule cliquée :', event.target.textContent);
 			cell = event.target;
+			tr = cell.closest("tr");
+			td = cell.closest("td");
+			plage_resa = tr.id;
+			date_resa = td.id;
+			ouverture = 1
 	        	if (event.target.classList.contains('not_open')) 
 			{
                             	cell.classList.remove("not_open");
-                            	cell.classList.add("highlight");
+				cell.classList.add("highlight");
+				ouverture = 1;
                         }
 			else if (event.target.classList.contains('highlight')) 
 			{
 				cell.classList.remove("highlight");
 				cell.classList.add("not_open");
+				ouverture = 0;
 			}
 			else if (event.target.classList.contains('user')) 
 			{
@@ -653,13 +719,17 @@ $currentUser = $_SESSION['user_abb'];
 				{
 					parent2.classList.remove("not_open");
 					parent2.classList.add("highlight");
+					ouverture = 1;
 				}
 				else
 				{
 					parent2.classList.remove("highlight");
 					parent2.classList.add("not_open");
+					ouverture = 0;
 				}
 			}
+			console.log('Cellule cliquée :', event.target.textContent,tr.id,td.id,ouverture);
+			enregistrerEtat(date_resa,plage_resa,ouverture);
 
 
 		}
@@ -733,11 +803,22 @@ $currentUser = $_SESSION['user_abb'];
         echo " data-connected=\"" .  htmlspecialchars($connected) . "\"";
         echo " data-admin=\"" .  htmlspecialchars($admin) . "\"";
 	echo "></div>";
-    ?>
+?>
+    <div>
     <div class="nav-arrows">
         <a href="?week=<?php echo $prevWeek; ?>" title="Semaine précédente">&#8592;</a>
+        <h2>Tableau de la Semaine <?php echo $week; ?></h2>
+<?php
+	generateCalendar($month_d0, $year_d0, $week);
+?>
         <a href="?week=<?php echo $nextWeek; ?>" title="Semaine suivante">&#8594;</a>
     </div>
+    </div>
+	<div style="margin-bottom:10px;">
+<?php
+	//generateCalendar($month_d0, $year_d0, $week);
+?>
+	</div>
 
 <?php
 if (isset($_SESSION['user_id'])) {
@@ -746,7 +827,6 @@ if (isset($_SESSION['user_id'])) {
 } else {
 }
 ?>
-    <h2>Tableau de la Semaine <?php echo $week; ?> (Année <?php echo $year; ?>)</h2>
 
     <table id="tableContainer">
         <thead>
@@ -756,8 +836,10 @@ if (isset($_SESSION['user_id'])) {
 		$list_days=array();
                 foreach ($daysOfWeek as $index => $day) {
                     $dtime = DateTime::createFromFormat('d-m-Y', $day);
-                    $class = ($day === $currentDate) ? "today" : "";
-		    echo "<th class='$class col_jour'>" . $jours[$dtime->format('w')] . "<br>" . $day . "</th>";
+		    $class = ($day === $currentDate) ? "today" : "";
+		    $day_m = DateTime::createFromFormat("d-m-Y", $day);
+		    $day_f = strftime("%d %B %Y", $day_m->getTimestamp());
+		    echo "<th class='$class col_jour'>" . $jours[$dtime->format('w')] . "<br>" . $day_f . "</th>";
 		    $list_days[]=$day;
                 }
                 ?>
@@ -777,6 +859,9 @@ if (isset($_SESSION['user_id'])) {
 			{
 				$jour = $jours_sem[$col];
 				$cellClass = "not_open";
+				$date_resa="$list_days[$col]";
+				$date_ouv = getOuverture($date_resa,$plage_resa); 
+				//echo $date_ouv;
 				foreach ($highlightedCells as $highlight) 
 				{
 					if ($highlight["day"] == $col && in_array($timeSlot, $highlight["times"])) 
@@ -785,6 +870,13 @@ if (isset($_SESSION['user_id'])) {
 						break;
 					}
 				}
+				if ($date_ouv != null)
+				{
+					if ($date_ouv == 1)
+						$cellClass = "highlight";
+					else
+						$cellClass = "not_open";
+				}
 				if ($timeSlot === "") 
 				{
 					echo "<td class=\"col_jour\"></td>"; // Cellules vides pour les lignes sans plages horaires
@@ -792,7 +884,6 @@ if (isset($_SESSION['user_id'])) {
 				else 
 				{
 					// Sélectionner 3 utilisateurs au hasard
-					$date_resa="$list_days[$col]";
 					$reservations = getReservations($date_resa, $plage_resa, $pdo_planning);
 					$users_resa=[];
 					$cowork_resa=[];
@@ -870,6 +961,7 @@ if (isset($_SESSION['user_id'])) {
     </table>
 
 <?php
+		
 if (isset($_SESSION['user_id'])) {
     // L'utilisateur est connecté
 	echo "<p align=\"center\">Connecté en tant que " . htmlspecialchars($_SESSION['user_name']);
@@ -984,13 +1076,32 @@ if (isset($_SESSION['user_id'])) {
 	//		li.remove(); // Supprime le <li>
 	//	}
 	//}
+	
+	function formatDate(dateStr) {
+		const mois = [
+			"Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+			"Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+		];
+
+		const [jour, moisNum, annee] = dateStr.split("-");
+
+		return `${parseInt(jour)} ${mois[parseInt(moisNum) - 1]} ${annee}`;
+	}
+
 
 	function removeItemAdmin(button,user) {
 
+		tr = button.closest("tr");
+		td = button.closest("td");
+		plage_resa = tr.id;
+		date_resa = formatDate(td.id);
 		console.log("Validation de la suppresion " + user);
 		modalDelete.style.display = 'inline';
 		header = modalDelete.querySelector(".modal-header");
-		header.textContent = "Supprimer " + user;
+		//header.textContent = "Supprimer " + user + "\njour : " + date_resa + "\nplage :" + plage_resa ;
+		//header.innerHTML = "<p>Supprimer " + user + "</p><p>jour : " + date_resa + "</p><p>plage :" + plage_resa +"</p>" ;
+		//header.innerHTML = "<li>Supprimer " + user + "</li><li>jour : " + date_resa + "</li><li>plage :" + plage_resa +"</li>" ;
+		header.innerHTML = "<div class=\"delete\">Supprimer le creneau ? </div><div class=\"deleteL\">" + user + "</div><div class=\"deleteL\">Jour : " + date_resa + "</div><div class=\"deleteL\">Plage horaire:" + plage_resa +"</div>" ;
 
 		modalDelete.dataset.param = user;
 	}

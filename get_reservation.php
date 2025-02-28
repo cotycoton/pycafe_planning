@@ -7,34 +7,30 @@ $password = ""; // Modifier si nécessaire
 
 try {
     // Connexion à la base de données
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-    // Vérification des paramètres GET
-    if (isset($_GET['date']) && isset($_GET['plage'])) {
-        $date = $_GET['date'];
-        $plage = $_GET['plage'];
-
-        // Requête SQL pour récupérer les réservations
-        $sql = "SELECT id, nom, prenom, commentaire, cowork FROM reservations WHERE date_reservation = :date AND plage_horaire = :plage";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':date', $date);
-        $stmt->bindParam(':plage', $plage);
-        $stmt->execute();
-
-        // Récupération des résultats
-        $resultats = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Retour JSON
-        header('Content-Type: application/json');
-        echo json_encode($resultats);
-    } else {
-        echo json_encode(["error" => "Veuillez spécifier une date et une plage horaire"]);
-    }
+    $pdo_planning = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo_planning->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    echo json_encode(["error" => "Erreur de connexion : " . $e->getMessage()]);
+    die("Erreur de connexion : " . $e->getMessage());
+}
+/**
+ * Fonction pour récupérer les réservations en fonction d'une date et d'une plage horaire.
+ *
+ * @param string $date  La date des réservations
+ * @param string $plage La plage horaire
+ * @param PDO $pdo_planning      L'instance de connexion PDO
+ * @return array        Tableau contenant les réservations
+ */
+function getReservations($date, $plage, $pdo_planning) {
+    $sql = "SELECT id, nom, prenom, commentaire, cowork 
+            FROM reservations 
+            WHERE date_reservation = :date AND plage_horaire = :plage";
+    $stmt = $pdo_planning->prepare($sql);
+    $stmt->bindParam(':date', $date);
+    $stmt->bindParam(':plage', $plage);
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
-
 
 

@@ -11,15 +11,8 @@ function sendPasswordResetEmail($email, $token) {
     try {
         // Configuration du serveur SMTP
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com'; // Remplacez par votre serveur SMTP
-        $mail->Username = 'epicafe.besayes@gmail.com'; // Remplacez par votre email
-        $mail->Password = 'epic@fe2024!'; // Remplacez par votre mot de passe SMTP
-        $mail->Username = 'julien.montagnier@gmail.com'; // Remplacez par votre email
-        $mail->Password = 'cD680cY3'; // Remplacez par votre mot de passe SMTP
 	
 	$mail->Host = 'smtp-relay.brevo.com'; // Remplacez par votre serveur SMTP
-        $mail->Username = 'epicafe.besayes@gmail.com'; // Remplacez par votre email
-        $mail->Password = 'epic@fe2024!'; // Remplacez par votre mot de passe SMTP
         $mail->Username = '8626ec001@smtp-brevo.com'; // Remplacez par votre email
         $mail->Password = 'nGkz8EDJIFSdZP5b'; // Remplacez par votre mot de passe SMTP
 	
