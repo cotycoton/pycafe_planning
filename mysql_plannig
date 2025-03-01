@@ -1,0 +1,36 @@
+
+
+-- Création de la base de données
+CREATE DATABASE IF NOT EXISTS gestion_coworking;
+USE gestion_coworking;
+
+-- Création de la table pour stocker les données
+CREATE TABLE reservations (
+    date_reservation VARCHAR(10) NOT NULL, -- Format 'YYYY-MM-DD'
+    plage_horaire VARCHAR(20) NOT NULL, -- Exemple : '08:00-10:00'
+    id VARCHAR(50) NOT NULL, -- Identifiant unique pour un couple (date, plage)
+    nom VARCHAR(100) NOT NULL,
+    prenom VARCHAR(100) NOT NULL,
+    commentaire TEXT,
+    cowork BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (date_reservation, plage_horaire, id) -- Clé primaire composite
+);
+
+
+
+CREATE INDEX idx_reservation ON reservations(date_reservation, plage_horaire);
+
+
+SELECT * FROM reservations;
+
+
+CREATE TABLE ouverture (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    date_reservation VARCHAR(10) NOT NULL, -- Format 'YYYY-MM-DD'
+    plage_horaire VARCHAR(50) NOT NULL,
+    etat TINYINT(1) NOT NULL CHECK (etat IN (0,1)),
+    UNIQUE(date_reservation, plage_horaire) -- Empêche les doublons
+);
+
+
+SELECT * FROM ouverture;
