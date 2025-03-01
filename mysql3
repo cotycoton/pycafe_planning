@@ -24,7 +24,8 @@ CREATE TABLE password_resets (
 );
 
 
-ALTER TABLE users ADD COLUMN role ENUM('user', 'admin') NOT NULL DEFAULT 'user';
+ALTER TABLE users ADD COLUMN role ENUM('user', 'admin','superadmin') NOT NULL DEFAULT 'user';
+ALTER TABLE users MODIFY COLUMN role ENUM('user', 'admin', 'superadmin') NOT NULL DEFAULT 'user';
 
 UPDATE users SET role = 'admin' WHERE email = 'julien.montagnier@gmail.com';
 

@@ -84,8 +84,9 @@ require 'database.php';
             const confirmPassword = document.getElementById('confirm_password').value;
             const error = document.getElementById('error');
             const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+	    const regex2 = /^(?=.*[\W])([A-Za-z\d\W]{6,})$/;
             
-            if (!regex.test(password)) {
+            if (!regex.test(password) && !regex2.test(password)) {
                 error.textContent = "Le mot de passe doit contenir au moins 6 caractères, incluant chiffres et lettres.";
                 return false;
             }

@@ -12,9 +12,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Vérification de la validité du mot de passe
     if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/', $password)) {
-        die("Le mot de passe doit contenir au moins 6 caractères, incluant chiffres et lettres.");
+	    if (!preg_match('/^(?=.*[\W])([A-Za-z\d\W]{6,})$/', $password)) {
+		    die("Le mot de passe doit contenir au moins 6 caractères, incluant chiffres et lettres. $password");
+	    }
     }
-    
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     
     // Vérification si l'email existe déjà

@@ -3,6 +3,7 @@
 require 'database.php'; // Connexion à la base de données
 require 'get_reservation.php';
 require 'get_ouverture.php';
+require 'get_function.php';
 
 
 session_start();
@@ -33,7 +34,8 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_me'])) {
 
 try {
     // Récupérer tous les utilisateurs sauf ceux avec le rôle 'admin'
-    $stmt = $pdo->prepare("SELECT id, firstname, lastname, email, phone FROM users WHERE role != 'admin'");
+    //$stmt = $pdo->prepare("SELECT id, firstname, lastname, email, phone FROM users WHERE role != 'admin'");
+    $stmt = $pdo->prepare("SELECT id, firstname, lastname, email, phone FROM users WHERE role !='superadmin'");
     $stmt->execute();
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -62,11 +64,14 @@ try {
     die("Erreur : " . $e->getMessage());
 }
 
+$maps = generateMapping($userData);
+$mapping = $maps['mapping'];
+$mapping_inv = $maps['mapping_inv'];
 $admin=0;
 if (isset($_SESSION['user_id'])) 
 {
 	$connected = 1;
-	if ($_SESSION['user_role']=="admin")
+	if (($_SESSION['user_role']=="admin") ||($_SESSION["user_role"]=="superadmin"))
 	       $admin = 1;	
 } else 
 {
@@ -78,19 +83,18 @@ if (isset($_SESSION['user_id']))
 // Récupérer le numéro de semaine depuis le paramètre URL
 
 $date_now = new DateTime("NOW");
-$date_ref = new DateTime("2024-01-01");
-$week_diff = $date_now->diff($date_ref)->days/7;
-$week_default=ceil($week_diff);
-echo $week_now;
+
+$week_default = $date_now->format('W');
+$year_default = $date_now->format('o');
+
 $weekNumber = isset($_GET['week']) ? (int)$_GET['week'] : $week_default;
-$smax=152;
+$smax=552;
 // Validation du numéro de semaine
 if ($weekNumber < 1 || $weekNumber > $smax) {
     die("Numéro de semaine invalide. Veuillez fournir un numéro entre 1 et 52.");
 }
 
-// Année cible (2024)
-$yearL=2024;
+$yearL= isset($_GET['year']) ? (int)$_GET['year'] : $year_default;
 
 // Calculer la date du lundi de la semaine donné
 //$timestamp = $date->setISODate($year, 1, $weekNumber);
@@ -105,14 +109,17 @@ for ($i = 0; $i < 7; $i++) {
     //$day = date('d-m-Y', strtotime("+$i day", $timestamp));
     $week_day = new DateTime();
     $week_day->setISODate($yearL, $weekNumber,$i+1);
+    if ($i == 0)
+	    $first_day_week = $week_day;
     $day=$week_day->format('d-m-Y');
     $year=$week_day->format('Y');
     $daysOfWeek[] = $day;
     $week=$week_day->format('W');
-    if ($i == 0)
+    $year_week=$week_day->format('o');
+    $month_week=$week_day->format('m');
+    if ($year_week == $year+1)
     {
-	$year_d0=$year;
-	$month_d0=$week_day->format('m');
+	//$month_week= 0;
     }
 }
 
@@ -140,21 +147,35 @@ $highlightedCells = [
 ];
 
 // Précédent et suivant
-$prevWeek = $weekNumber > 1 ? $weekNumber - 1 : $smax;
-$nextWeek = $weekNumber < $smax ? $weekNumber + 1 : 1;
+$prev_date = clone($first_day_week);
+$prev_date = $prev_date->modify('-7days');
+$prev_Week = $prev_date->format('W');
+$prev_Year = $prev_date->format('o');
+
+$next_date = clone($first_day_week);
+$next_date = $next_date->modify('+7days');
+$next_Week = $next_date->format('W');
+$next_Year = $next_date->format('o');
+
 
 // Date actuelle
 $currentDate = date('d-m-Y');
+$curenteDateTime = new DateTime();
+$curenteDateTime->setTime(0,0,0);
+$actual_Week=date('W');
+$actual_Year=date('o');
 
 // Liste des utilisateurs
 $users = ["user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8", "user9", "user10"];
 $users = ["user1", "user2", "user3", "user4", "user5", "user6", "user7", "user8", "user9", "user10","users11","users12","users13","users14"];
-$users =$nameAbbreviations;
+$users =array_keys($mapping_inv);//nameAbbreviations;
+sort($users);
+$users_all = $users;
 
 $jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
 
-$currentUser = $_SESSION['user_abb'];
+$currentUser = $mapping[$_SESSION['user_id']];
 ?>
 
 <!DOCTYPE html>
@@ -249,7 +270,8 @@ $currentUser = $_SESSION['user_abb'];
             background-color: #f0f0f0;
         }
         .highlight {
-            background-color: #dcedc8;
+            //background-color: #dcedc8;
+            background-color: #d6eaf8;
 	    cursor: pointer;
             padding:1px;
         }
@@ -259,7 +281,7 @@ $currentUser = $_SESSION['user_abb'];
             padding:1px;
         }
         .selected {
-            background-color: #aed581 !important;
+            background-color: #aed6f1 !important;
         }
         .nav-arrows {
             display: flex;
@@ -279,7 +301,13 @@ $currentUser = $_SESSION['user_abb'];
         .today {
             background-color: #4caf50 !important;
             color: white;
-        }
+	}
+	.menu
+	{
+            display: flex;
+            justify-content: center;
+	    align-items: center;
+	}
         .user-list {
             margin: 0;
             padding: 0;
@@ -545,7 +573,7 @@ $currentUser = $_SESSION['user_abb'];
 			userList = userLists[0];
 
 		let users_yet = [];
-		let users_all = <?php echo json_encode($users); ?>;
+		let users_all = <?php echo json_encode($users_all); ?>;
 		const users = cell.querySelectorAll('.user, .current-user');
 		users.forEach
 		(
@@ -806,19 +834,14 @@ $currentUser = $_SESSION['user_abb'];
 ?>
     <div>
     <div class="nav-arrows">
-        <a href="?week=<?php echo $prevWeek; ?>" title="Semaine précédente">&#8592;</a>
+        <a href="?week=<?php echo $prev_Week; ?>&year=<?php echo $prev_Year; ?>" title="Semaine précédente">&#8592;</a>
         <h2>Tableau de la Semaine <?php echo $week; ?></h2>
 <?php
-	generateCalendar($month_d0, $year_d0, $week);
+	generateCalendar($month_week, $year_week, $week);
 ?>
-        <a href="?week=<?php echo $nextWeek; ?>" title="Semaine suivante">&#8594;</a>
+        <a href="?week=<?php echo $next_Week; ?>&year=<?php echo $next_Year; ?>" title="Semaine suivante">&#8594;</a>
     </div>
     </div>
-	<div style="margin-bottom:10px;">
-<?php
-	//generateCalendar($month_d0, $year_d0, $week);
-?>
-	</div>
 
 <?php
 if (isset($_SESSION['user_id'])) {
@@ -886,12 +909,14 @@ if (isset($_SESSION['user_id'])) {
 					// Sélectionner 3 utilisateurs au hasard
 					$reservations = getReservations($date_resa, $plage_resa, $pdo_planning);
 					$users_resa=[];
+					$users_resa_id=[];
 					$cowork_resa=[];
 					if (!empty($reservations)) 
 					{
 						foreach ($reservations as $res) 
 						{
-							$users_resa[]=$res['id'];
+							$users_resa_id[]=$res['id'];
+							$users_resa[]=$mapping[$res['id']];
 							$cowork_resa[]=$res['cowork'];
 						}
 						$cellClass = "highlight";
@@ -920,6 +945,7 @@ if (isset($_SESSION['user_id'])) {
 							$isAdmin = $admin;
 							$cowork = (bool) $cowork_resa[$c];
 							$cowork_html = "";
+							$user_id=$users_resa_id[$c];
 							if ($cowork ==1)
 							{
 								$cowork = "true";
@@ -929,19 +955,19 @@ if (isset($_SESSION['user_id'])) {
 								$cowork = "false";
 							if ($user == $currentUser) 
 							{
-								echo "<li class=\"li\"><div data-cowork=\"$cowork\" class=\"current-user\">$cowork_html$user";
-								echo "<button onclick=\"removeItemAdmin(this,'" .$user . "')\" class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
+								echo "<li class=\"li\"><div data-cowork=\"$cowork\" data-user_id=\"$user_id\" class=\"current-user\">$cowork_html$user";
+								echo "<button onclick=\"removeItemAdmin(this,'" .$user . "'," .$user_id . ")\" class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
 								echo "</div>";
 							}
 							elseif ($isAdmin) 
 							{
-								echo "<li  class=\"li\"><div  data-cowork=\"$cowork\" class=\"user\">$cowork_html$user";
-								echo "<button onclick=\"removeItemAdmin(this,'" .$user . "')\"  class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
+								echo "<li  class=\"li\"><div  data-cowork=\"$cowork\" data-user_id=\"$user_id\"  class=\"user\">$cowork_html$user";
+								echo "<button onclick=\"removeItemAdmin(this,'" .$user . "', " .$user_id . ")\"  class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
 								echo "</div>";
 							}
 							else
 							{
-								echo "<li class=\"li\"><div  data-cowork=\"$cowork\" class=\"user\">$cowork_html$user";
+								echo "<li class=\"li\"><div  data-cowork=\"$cowork\" data-user_id=\"$user_id\"  class=\"user\">$cowork_html$user";
 								echo "</div>";
 							}
 							echo "</li>";
@@ -963,17 +989,22 @@ if (isset($_SESSION['user_id'])) {
 <?php
 		
 if (isset($_SESSION['user_id'])) {
-    // L'utilisateur est connecté
-	echo "<p align=\"center\">Connecté en tant que " . htmlspecialchars($_SESSION['user_name']);
-        if ($_SESSION["user_role"] == "admin")
-	   echo " (admin) " ;
-    echo "- <a href=\"logout.php\">Déconnexion</a>";
-	if ($_SESSION["user_role"] == "admin")
+	// L'utilisateur est connecté
+	echo "<div class=\"menu\">";
+	if (($week != $actual_Week) || ($yearL != $actual_Year))
+		echo "<a href=\"planning.php?week=$actual_Week&year=$actual_Year\">Semaine actuelle</a>";
+	if (($_SESSION['user_role']=="admin") ||($_SESSION["user_role"]=="superadmin"))
 	{
 		//echo "- <a href=\"#\" onclick=\"cleanSelected()\" id=\"toggleEditMode\" >Edit mode</a> - ";
 		echo "<button class=\"btn btn-light\" onclick=\"cleanSelected()\" id=\"toggleEditMode\" >Edit mode</button>";
     		echo "<button class=\"btn btn-light\" onclick=\"openModal()\">Créer un événement</button></p>";
 	}
+	echo "</div>";
+	echo "<p align=\"center\"><i>Connecté en tant que " . htmlspecialchars($_SESSION['user_name']);
+	if (($_SESSION['user_role']=="admin") ||($_SESSION["user_role"]=="superadmin"))
+		echo " (admin) " ;
+	echo "- <a href=\"logout.php\">Déconnexion</a>";
+	echo "</i></p>";
 } else {
     echo "<p align=\"center\">Accès en lecture seul, veuillez vous <a href=\"login2.php\">connecter</a></p>";
 
@@ -1019,7 +1050,7 @@ if (isset($_SESSION['user_id'])) {
     <div id="userModal" class="modal">
 	<div class="modal-content">
             <?php
-		if ($_SESSION["user_role"]=="admin")
+		if (($_SESSION['user_role']=="admin") ||($_SESSION["user_role"]=="superadmin"))
             		echo "<div class=\"modal-header\">Sélectionnez un utilisateur</div>";
 		else
             		echo "<div class=\"modal-header\">Options</div>";
@@ -1089,13 +1120,13 @@ if (isset($_SESSION['user_id'])) {
 	}
 
 
-	function removeItemAdmin(button,user) {
+	function removeItemAdmin(button,user,user_id) {
 
 		tr = button.closest("tr");
 		td = button.closest("td");
 		plage_resa = tr.id;
 		date_resa = formatDate(td.id);
-		console.log("Validation de la suppresion " + user);
+		console.log("Validation de la suppresion " + user_id);
 		modalDelete.style.display = 'inline';
 		header = modalDelete.querySelector(".modal-header");
 		//header.textContent = "Supprimer " + user + "\njour : " + date_resa + "\nplage :" + plage_resa ;
@@ -1103,7 +1134,7 @@ if (isset($_SESSION['user_id'])) {
 		//header.innerHTML = "<li>Supprimer " + user + "</li><li>jour : " + date_resa + "</li><li>plage :" + plage_resa +"</li>" ;
 		header.innerHTML = "<div class=\"delete\">Supprimer le creneau ? </div><div class=\"deleteL\">" + user + "</div><div class=\"deleteL\">Jour : " + date_resa + "</div><div class=\"deleteL\">Plage horaire:" + plage_resa +"</div>" ;
 
-		modalDelete.dataset.param = user;
+		modalDelete.dataset.param = user_id;
 	}
 
 
@@ -1144,13 +1175,17 @@ if (isset($_SESSION['user_id'])) {
 	    tr = userList.closest("tr");
 	    td = userList.closest("td");
 	    console.log("saving db ",selectedUser,tr.id,td.id);
+	    const mapping = <?php echo json_encode($mapping, JSON_HEX_TAG); ?>;
+	    const mapping_inv = <?php echo json_encode($mapping_inv, JSON_HEX_TAG); ?>;
 	    plage_resa = tr.id;
 	    date_resa = td.id;
 	    detail_resa = "";
 	    cowork_resa = serviceUser;
 	    nom_resa = "";
 	    prenom_resa = "";
-	    id_resa = selectedUser;
+	    console.log("mapping_inv",mapping_inv);
+	    id_resa = mapping_inv[selectedUser];
+	    console.log("save db id",id_resa);
 	    ajouterReservation(date_resa, plage_resa, id_resa, nom_resa, prenom_resa, cowork_resa, detail_resa);
 	    console.log("save ok");
 
@@ -1171,10 +1206,10 @@ if (isset($_SESSION['user_id'])) {
 	    console.log("removeItemAdmin(",removeButton,userToAdd);
 	    //removeButton.addEventListener('click', () => modalDelete.style.display = 'inline');
 
-	    const contentHtml = "<button onclick=\"removeItemAdmin(this,'" + userToAdd + "')\" class=\"action-button remove-user hidden-button\"><i class=\"bi bi-trash\"></i></button>";
+	    const contentHtml = "<button onclick=\"removeItemAdmin(this,'" + userToAdd + "'," + id_resa +")\" class=\"action-button remove-user hidden-button\"><i class=\"bi bi-trash\"></i></button>";
 	    //	userDiv.innerHTML += contentHtml;
 	    userDiv.appendChild(removeButton);
-	    removeButton.setAttribute('onclick', "removeItemAdmin(this, '"+userToAdd+ "')");
+	    removeButton.setAttribute('onclick', "removeItemAdmin(this, '"+userToAdd+ "'," + id_resa + ")");
 	    //removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));
 
 	    userDiv.parentNode.parentNode.parentNode.classList.add('cowork');
