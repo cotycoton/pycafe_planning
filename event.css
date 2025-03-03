@@ -38,6 +38,7 @@
 /* Empêche le texte d'être trop collé */
 .color-dropdown option {
     padding: 5px;
+    font-weight:normal;
 }
 
 
@@ -143,5 +144,6 @@
 }
 
 .form-select{
-	width: 80%;
+	width: 100%;
+	font-weight: normal;
 }

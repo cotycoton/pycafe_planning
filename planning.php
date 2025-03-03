@@ -274,7 +274,36 @@ $currentUser = $mapping[$_SESSION['user_id']];
             background-color: #d6eaf8;
 	    cursor: pointer;
             padding:1px;
-        }
+	}
+	.epidej{
+            background-color: #f39c12 !important;
+
+	}
+	.square {
+		display: flex;
+        	width: 15px;
+		height: 15px;
+		margin-left:5px;
+		margin-right:5px;
+		margin-top:2px;
+		float:right;
+	}
+	.red
+	{
+		background:red;
+	}
+	.yellow
+	{
+		background:yellow;
+	}
+	.blue
+	{
+		background:blue;
+	}
+	.green
+	{
+		background:green;
+	}
         .not_open {
             background-color: #ffffff;
             cursor: pointer;
@@ -312,6 +341,16 @@ $currentUser = $mapping[$_SESSION['user_id']];
             margin: 0;
             padding: 0;
             list-style-type: none;
+	}
+        .event-list {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+	}
+	.event
+	{
+		margin:2px;
+		padding:0px;
 	}
 	#col0 {
 	    font-size: 0.8rem;
@@ -862,7 +901,7 @@ if (isset($_SESSION['user_id'])) {
 		    $class = ($day === $currentDate) ? "today" : "";
 		    $day_m = DateTime::createFromFormat("d-m-Y", $day);
 		    $day_f = strftime("%d %B %Y", $day_m->getTimestamp());
-		    echo "<th class='$class col_jour'>" . $jours[$dtime->format('w')] . "<br>" . $day_f . "</th>";
+		    echo "<th class='$class col_jour' data-param=\"" . $day_m->format("d-m-Y") . "\">" . $jours[$dtime->format('w')] . "<br>" . $day_f . "</th>";
 		    $list_days[]=$day;
                 }
                 ?>
@@ -883,26 +922,52 @@ if (isset($_SESSION['user_id'])) {
 				$jour = $jours_sem[$col];
 				$cellClass = "not_open";
 				$date_resa="$list_days[$col]";
-				$date_ouv = getOuverture($date_resa,$plage_resa); 
+				$date_ouv = getOuverture($date_resa,$plage_resa);
+				$isEpidej = isFirstSaturdayOfMonth($date_resa);
 				//echo $date_ouv;
 				foreach ($highlightedCells as $highlight) 
 				{
 					if ($highlight["day"] == $col && in_array($timeSlot, $highlight["times"])) 
 					{
 						$cellClass = "highlight";
+						$epidejClass="";
+						if ($isEpidej == 1)
+							$epidejClass=" epidej";
 						break;
+					}
+					else
+					{
+						$epidejClass="";
 					}
 				}
 				if ($date_ouv != null)
 				{
 					if ($date_ouv == 1)
+					{
 						$cellClass = "highlight";
+					}
 					else
+					{
 						$cellClass = "not_open";
+						$epidejClass="";
+					}
 				}
 				if ($timeSlot === "") 
 				{
 					echo "<td class=\"col_jour\"></td>"; // Cellules vides pour les lignes sans plages horaires
+				}
+				else if ($timeSlot === "Evenements") 
+				{
+					echo "<td class=\"col_jour\" data-param=\"" . $date_resa . "\">";
+					echo "<ul class=\"event-list\">";
+					if ($isEpidej==1)
+					{
+						echo "<li class=\"li\"><div class=\"event\">";
+						echo "Epidej<div class=\"square epidej\"></div>";
+						echo "</div></li>";
+					}
+					echo "</ul></td>"; // Cellules vides pour les lignes sans plages horaires
+
 				}
 				else 
 				{
@@ -924,7 +989,7 @@ if (isset($_SESSION['user_id'])) {
 					//$randomUsers = array_slice($users, rand(0, count($users) - 3), 3);
 					//$randomUsers = array_slice($users, rand(0, count($users) - 3), rand(0,count($users)));
 					//echo "<td id=\"$jour-$list_days[$col]\" class='$cellClass col_jour'>";
-					echo "<td id=\"$date_resa\" class='$cellClass col_jour'>";
+					echo "<td id=\"$date_resa\" class='$cellClass$epidejClass col_jour'>";
 					if ($cellClass === "highlight") 
 					{
 						echo "<ul class='user-list'>";

@@ -37,4 +37,33 @@ function generateMapping($data) {
 }
 
 
+function isFirstSaturdayOfMonth(string $dateStr) {
+    //$date = new DateTime($dateStr);
+    $date = DateTime::createFromFormat('d-m-Y', $dateStr);
+    if ($date->format('N') != 6) {
+        return 0; // Ce n'est pas un samedi
+    }
+    //echo "$dateStr";
+    // Trouver le premier samedi du mois
+    $firstSaturday = new DateTime($date->format('Y-m-01'));
+    while ($firstSaturday->format('N') != 6) {
+        $firstSaturday->modify('+1 day');
+    }
+    $res = ($date->format('Y-m-d') == $firstSaturday->format('Y-m-d'));
+    //echo "<p>" . $date->format('Y-m-d') . "</p>";
+    //echo "<p>" . $firstSaturday->format('Y-m-d') . "</p>";
+    if ($res)
+	    $res = 1;
+    else
+	    $res = 0;
+    return $res;
+}
+
+// Exemples de tests
+//$dates = ['2024-06-01', '2024-06-08', '2024-07-06', '2024-07-13'];
+//foreach ($dates as $date) {
+//    echo "$date : " . (isFirstSaturdayOfMonth($date) ? "? Premier samedi du mois" : "? Pas le premier samedi") . "\n";
+//}
+
+
 ?>

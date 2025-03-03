@@ -31,6 +31,14 @@
                        </div>
                        <input type="hidden" id="selectedColor" value="red"> <Stocke la couleur choisie >
 		   </div-->
+		   <div class="mb-3">
+                       <label for="eventDays" class="form-label">jour</label>
+                       <div>
+                           <select class="form-select color-dropdown" id="eventDays">
+                           </select>
+                       </div>
+		   </div>
+
                    <div class="mb-3">
                        <label for="eventColor" class="form-label">Couleur</label>
                        <div class="color-select-container">
