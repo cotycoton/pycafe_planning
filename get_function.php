@@ -65,5 +65,19 @@ function isFirstSaturdayOfMonth(string $dateStr) {
 //    echo "$date : " . (isFirstSaturdayOfMonth($date) ? "? Premier samedi du mois" : "? Pas le premier samedi") . "\n";
 //}
 
+function getEventsByDate($date,$pdo_event) {
+    //$sql = "SELECT * FROM events WHERE date_event = ?";
+    $sql = "SELECT * FROM events WHERE date_event = :date_event";
+    $stmt = $pdo_event->prepare($sql);
+    $stmt->bindParam(':date_event', $date);
+    //$stmt->bind_param("s", $date);
+    $stmt->execute();
+    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $events;
+    $result = $stmt->get_result();
+    //return print_r($stmt);
+    $events = $result->fetch_all(MYSQLI_ASSOC);
+    //echo json_encode($events);
+}
 
 ?>

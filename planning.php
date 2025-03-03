@@ -958,6 +958,7 @@ if (isset($_SESSION['user_id'])) {
 				}
 				else if ($timeSlot === "Evenements") 
 				{
+					$events = getEventsByDate($date_resa,$pdo_event);
 					echo "<td class=\"col_jour\" data-param=\"" . $date_resa . "\">";
 					echo "<ul class=\"event-list\">";
 					if ($isEpidej==1)
@@ -965,6 +966,16 @@ if (isset($_SESSION['user_id'])) {
 						echo "<li class=\"li\"><div class=\"event\">";
 						echo "Epidej<div class=\"square epidej\"></div>";
 						echo "</div></li>";
+					}
+					if (!empty($events))
+					{
+						foreach ($events as $event)
+						{
+							$color=$event["color"];
+							echo "<li class=\"li\"><div class=\"event\">";
+							echo $event['nom'] . "<br>" . $event["heure_debut"] . " - " . $event["heure_fin"] . "<div class=\"square $color\"></div>";
+							echo "</div></li>";
+						}
 					}
 					echo "</ul></td>"; // Cellules vides pour les lignes sans plages horaires
 

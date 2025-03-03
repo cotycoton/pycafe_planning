@@ -82,6 +82,19 @@ const myEvent =
 			}
 		);
 
+		let eventData = {
+			nom: eventName,
+			date_event: eventDay,
+			heure_debut: startTime,
+			heure_fin: endTime,
+			color: eventColor,
+			details: eventDetails,
+			ressources: ""
+		};
+
+		saveOrUpdateEvent(eventData);
+
+
 		console.log(events);
 
 		let modal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
@@ -124,4 +137,33 @@ function updateSelectColor() {
     colorDropdown.style.backgroundColor = selectedColor;
     colorContainer.style.backgroundColor = selectedColor;
 }
+
+function saveOrUpdateEvent(eventData) {
+    fetch('save_event.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData)
+    })
+    .then(response => response.json())
+    .then(data => console.log('Succès:', data))
+    .catch(error => console.error('Erreur:', error));
+}
+
+function deleteEvent(eventId) {
+    fetch('delete_event.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: eventId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Événement supprimé avec succès');
+        } else {
+            console.error('Erreur lors de la suppression:', data.error);
+        }
+    })
+    .catch(error => console.error('Erreur:', error));
+}
+
 
