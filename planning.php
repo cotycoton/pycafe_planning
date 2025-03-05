@@ -248,6 +248,9 @@ $currentUser = $mapping[$_SESSION['user_id']];
 	.col_jour{
 	    width: 13.5vw;
 	}
+	.ligne_event{
+	    background:#eaf7ee;
+	}
 	.delete
 	{
 	    padding:5px;
@@ -915,7 +918,12 @@ if (isset($_SESSION['user_id'])) {
 			if ($timeSlot=="")
 				echo "<tr class=\"tr_inter\">";
 			else
-				echo "<tr id=\"$timeSlot\">";
+			{
+				if ($timeSlot=="Evenements")
+					echo "<tr id=\"$timeSlot\" class=\"ligne_event\">";
+				else
+					echo "<tr id=\"$timeSlot\">";
+			}
 			echo "<td id=\"col0\">" . $timeSlot . "</td>";
 			for ($col = 0; $col < 7; $col++) 
 			{
@@ -959,7 +967,7 @@ if (isset($_SESSION['user_id'])) {
 				else if ($timeSlot === "Evenements") 
 				{
 					$events = getEventsByDate($date_resa,$pdo_event);
-					echo "<td class=\"col_jour\" data-param=\"" . $date_resa . "\">";
+					echo "<td class=\"col_jour ligne_event\" data-param=\"" . $date_resa . "\">";
 					echo "<ul class=\"event-list\">";
 					if ($isEpidej==1)
 					{
