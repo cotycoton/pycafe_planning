@@ -66,8 +66,9 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-success" onclick="myEvent.createEvent()">Créer</button>
+                <button id="cancel_button" type="button" class="btn btn-danger" data-bs-dismiss="modal">Annuler</button>
+                <button id="delete_button" type="button" class="btn btn-danger" data-bs-dismiss="modal">Supprimer</button>
+                <button id="create_button" type="button" class="btn btn-success" onclick="myEvent.createEvent()" data-create="1">Créer</button>
             </div>
         </div>
     </div>

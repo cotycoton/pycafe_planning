@@ -4,6 +4,8 @@
 .modal-header {
     background-color: #b66e6e;
     color: white;
+    display: flex;
+    justify-content: space-between;
 }
 
 /* Centrer le contenu */

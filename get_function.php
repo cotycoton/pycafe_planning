@@ -80,4 +80,21 @@ function getEventsByDate($date,$pdo_event) {
     //echo json_encode($events);
 }
 
+function getEventsById($id,$pdo_event) {
+    //$sql = "SELECT * FROM events WHERE id = ?";
+    $sql = "SELECT * FROM events WHERE id = :id";
+    $stmt = $pdo_event->prepare($sql);
+    $stmt->bindParam(':id', $id);
+    //$stmt->bind_param("s", $date);
+    $stmt->execute();
+    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $events;
+    $result = $stmt->get_result();
+    //return print_r($stmt);
+    $events = $result->fetch_all(MYSQLI_ASSOC);
+    //echo json_encode($events);
+}
+
+
+
 ?>

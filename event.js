@@ -12,14 +12,50 @@
 function openModal() {
     let modal = new bootstrap.Modal(document.getElementById('eventModal'));
      
+	const h5 = document.querySelector('#eventModal h5');
+	h5.textContent = 'Créer un evenement';
+	
+	const creer_b = document.querySelector('#eventModal #create_button');
+	const delete_b = document.querySelector('#eventModal #delete_button');
+	const cancel_b = document.querySelector('#eventModal #cancel_button');
+	creer_b.textContent = 'Créer';
+	creer_b.dataset.create = -1;
+			
+	creer_b.classList.add('visible-button');
+	creer_b.classList.remove('hidden-button');
+	cancel_b.classList.add('visible-button');
+	cancel_b.classList.remove('hidden-button');
+	delete_b.classList.remove('visible-button');
+	delete_b.classList.add('hidden-button');
+
+	const eventName = document.querySelector('#eventModal #eventName');
+	eventName.value = '';
+
+	const startTime = document.querySelector('#eventModal #startTime');
+	startTime.value = '';
+
+	const endTime = document.querySelector('#eventModal #endTime');
+	endTime.value = '';
+
+	const detail = document.querySelector('#eventModal #eventDetails');
+	detail.value = '';
+
+	const color = document.querySelector('#eventModal #eventColor');
+	color.value = 'red';
+
+	updateSelectColor();
+
 		
-    //const th = document.querySelectorAll('thead th');
-    const th = document.querySelectorAll('thead th.col_jour');
-    const select = document.querySelector('#eventDays');
-    console.log(th);
-    console.log(select);
-    c=0;
-    th.forEach
+	//const th = document.querySelectorAll('thead th');
+	const th = document.querySelectorAll('thead th.col_jour');
+	const select = document.querySelector('#eventDays');
+	const select_option = document.querySelectorAll('#eventModal #eventDays option');
+	if (select_option.length == 0)
+	{
+		console.log(th);
+		console.log(select);
+		c=0;
+		th.forEach
 		(
 			col => 
 			{
@@ -31,6 +67,7 @@ function openModal() {
 				c++;
 			}
 		);
+	}
 
 
     modal.show();
@@ -39,7 +76,7 @@ function openModal() {
 // Fonction pour récupérer les valeurs du formulaire et afficher en console
 const myEvent = 
 {
-	createEvent:function() {
+	createEvent: async function() {
 		let eventName = document.getElementById("eventName").value;
 		let eventColor = document.getElementById("eventColor").value;
 		let eventDay = document.getElementById("eventDays").value;
@@ -61,26 +98,7 @@ const myEvent =
 			détails: eventDetails
 		});
     
-		const events = document.querySelector('#Evenements');
-		const tdElements = events.querySelectorAll('td.col_jour');
-		tdElements.forEach
-		(
-			td => 
-			{
-				const attr = td.getAttribute('data-param');
-				if ( attr == eventDay)
-				{
-					console.log(td);
-					console.log("comp",attr, eventDay);
-					const eventList = td.querySelector('ul');
-					eventItem = document.createElement('li');
-					divItem = document.createElement('div');
-					divItem.innerHTML = eventName + " <br> " + startTime + " - " + endTime + "<div class=\"square " + eventColor + "\"></div>";
-					eventItem.appendChild(divItem);
-					eventList.appendChild(eventItem);
-				}
-			}
-		);
+
 
 		let eventData = {
 			nom: eventName,
@@ -91,11 +109,58 @@ const myEvent =
 			details: eventDetails,
 			ressources: ""
 		};
+	
+		const creer_b = document.querySelector('#eventModal #create_button');
+		if (creer_b.dataset.create!="-1")
+		{
+			eventData.id = creer_b.dataset.create;
+		}
 
-		saveOrUpdateEvent(eventData);
+		console.log("EVENDATA",eventData);
+		
+		const events = document.querySelector('#Evenements');
+		const tdElements = events.querySelectorAll('td.col_jour');
 
 
-		console.log(events);
+		
+		const eventId = await AsyncSaveOrUpdateEvent(eventData);
+		
+		if (eventId)
+		{
+			if (creer_b.dataset.create!="-1")
+			{
+				// suppression ancien evenement (html seulement)
+				document.getElementById("href_event_"+eventId).remove();
+			}
+			// creation evenement
+			let lien = null;
+			tdElements.forEach
+			(
+				td => 
+				{
+					const attr = td.getAttribute('data-param');
+					if ( attr == eventDay)
+					{
+						console.log(td);
+						console.log("comp",attr, eventDay);
+						const eventList = td.querySelector('ul');
+						eventItem = document.createElement('li');
+						divItem = document.createElement('div');
+						lien = document.createElement('a');
+						lien.href="#";
+						divItem.innerHTML = eventName + " <br> " + startTime + " - " + endTime + "<div class=\"square " + eventColor + "\"></div>";
+						eventItem.appendChild(divItem);
+						lien.appendChild(eventItem)
+						eventList.appendChild(lien);
+					}
+				}
+			);
+			console.log("AsyncSaveOrUpdateEvent, id = ",eventId);
+			lien.setAttribute("onclick", "editEvent(this," + eventId + ")");
+			lien.id="href_event_" + eventId;
+		};
+
+
 
 		let modal = bootstrap.Modal.getInstance(document.getElementById('eventModal'));
 		modal.hide();
@@ -138,32 +203,172 @@ function updateSelectColor() {
     colorContainer.style.backgroundColor = selectedColor;
 }
 
-function saveOrUpdateEvent(eventData) {
-    fetch('save_event.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventData)
-    })
-    .then(response => response.json())
-    .then(data => console.log('Succès:', data))
-    .catch(error => console.error('Erreur:', error));
+
+
+async function AsyncSaveOrUpdateEvent(eventData) {
+
+	try
+	{
+		const response = await fetch('save_event.php', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(eventData)
+		});
+
+		const data = await response.json();
+		console.log(data);
+		return data.id; // Retourne l'ID pour un usage futur
+	} catch(error) 	{ 
+		console.error('Erreur:', error);
+		return null;
+	}
 }
 
-function deleteEvent(eventId) {
-    fetch('delete_event.php', {
+
+
+
+async function deleteEvent(eventId) {
+    try	{
+	const response = await fetch('delete_event.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: eventId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            console.log('Événement supprimé avec succès');
-        } else {
-            console.error('Erreur lors de la suppression:', data.error);
-        }
-    })
-    .catch(error => console.error('Erreur:', error));
+	});
+	    const data = await response.json();
+	    if (data.success)
+	    {
+		    document.getElementById("href_event_"+eventId).remove();
+		    console.log('Événement supprimé avec succès');
+	    }
+	    else {
+		    console.error('Erreur lors de la suppression:', data.error);
+	    }
+
+    } catch(error)
+	{
+		console.error('Erreur:', error);
+	}
+}
+
+function getEventById(eventId) {
+    return fetch('get_event.php?id=' + eventId)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Erreur HTTP: " + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                return data.event; // Retourne l'événement sous forme d'objet
+            } else {
+                throw new Error("Erreur: " + data.error);
+            }
+        })
+        .catch(error => {
+            console.error("Erreur lors de la récupération de l'événement:", error);
+        });
 }
 
 
+
+function editEvent(node,id)
+{
+	
+	// Exemple d'utilisation
+	getEventById(id).then(event => {
+		if (event) {
+
+
+
+			console.log("Nom de l'événement:", event.nom);
+			//let modal = document.getElementById('eventModal');
+			let modal = new bootstrap.Modal(document.getElementById('eventModal'));
+
+			const h5 = document.querySelector('#eventModal h5');
+			h5.textContent = 'Modification de l\'evenement';
+
+			
+			const creer_b = document.querySelector('#eventModal #create_button');
+			const delete_b = document.querySelector('#eventModal #delete_button');
+			const cancel_b = document.querySelector('#eventModal #cancel_button');
+			creer_b.textContent = 'Sauvegarder';
+			creer_b.dataset.create = id;
+			
+		        delete_b.classList.remove('hidden-button');
+		        delete_b.classList.add('visible-button');
+	    		delete_b.setAttribute('onclick', "deleteEvent(" + event.id + ")");
+
+
+			const eventName = document.querySelector('#eventModal #eventName');
+			eventName.value = event.nom;
+			
+			const eventDays = document.querySelector('#eventModal #eventDays');
+			const eventDays_option = document.querySelectorAll('#eventModal #eventDays option');
+			if (eventDays_option.length == 0)
+			{
+
+				const th = document.querySelectorAll('thead th.col_jour');
+				th.forEach
+				(
+					col => 
+					{
+						console.log(col.textContent);
+						const opt1 = document.createElement("option");
+						opt1.value=col.getAttribute("data-param");
+						opt1.text=col.textContent;
+						eventDays.add(opt1,null);
+					}
+				);
+			}
+			eventDays.value=event.date_event;
+			
+			const startTime = document.querySelector('#eventModal #startTime');
+			startTime.value = event.heure_debut;
+			
+			const endTime = document.querySelector('#eventModal #endTime');
+			endTime.value = event.heure_fin;
+
+			const detail = document.querySelector('#eventModal #eventDetails');
+			detail.value = event.details;
+			
+			const color = document.querySelector('#eventModal #eventColor');
+			color.value = event.color;
+
+			updateSelectColor();
+
+
+			const mydiv = document.getElementById('myDiv');
+			const admin = mydiv.getAttribute('data-admin');
+			const connected = mydiv.getAttribute('data-connected');
+			isAdmin = (admin == "1") && (connected == "1");
+
+			if (isAdmin ==false)
+			{
+				eventName.disabled=true;
+				eventDays.disabled=true;
+				color.disabled=true;
+				detail.disabled=true;
+				startTime.disabled=true;
+				endTime.disabled=true;
+
+				delete_b.classList.remove('visible-button');
+				delete_b.classList.add('hidden-button');
+
+				creer_b.classList.remove('visible-button');
+				creer_b.classList.add('hidden-button');
+
+				cancel_b.classList.remove('visible-button');
+				cancel_b.classList.add('hidden-button');
+
+				h5.textContent = 'Information évenement';
+			}
+			//console.log(event);
+			modal.show();
+
+		}
+	});
+    
+
+
+}

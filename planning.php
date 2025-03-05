@@ -441,7 +441,7 @@ $currentUser = $mapping[$_SESSION['user_id']];
             margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 350px;
+            width: 550px;
         }
         .modal-header { font-weight: bold; margin-bottom: 15px; display:block;}
         .modal-footer { margin-top: 15px; text-align: right; }
@@ -972,7 +972,7 @@ if (isset($_SESSION['user_id'])) {
 						foreach ($events as $event)
 						{
 							$color=$event["color"];
-							echo "<li class=\"li\"><div class=\"event\">";
+							echo "<a href=\"#\" onclick=\"editEvent(this," . $event['id'] . ")\"  id=\"href_event_" . $event['id'] . "\"><li class=\"li\"><div class=\"event\" data-param=\"" . $event["id"] . "\">";
 							echo $event['nom'] . "<br>" . $event["heure_debut"] . " - " . $event["heure_fin"] . "<div class=\"square $color\"></div>";
 							echo "</div></li>";
 						}
