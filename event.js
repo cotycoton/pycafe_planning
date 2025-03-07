@@ -39,6 +39,9 @@ function openModal() {
 
 	const detail = document.querySelector('#eventModal #eventDetails');
 	detail.value = '';
+	
+	const persons = document.querySelector('#eventModal #eventPersonnes');
+	persons.value = '1';
 
 	const color = document.querySelector('#eventModal #eventColor');
 	color.value = 'red';
@@ -83,6 +86,7 @@ const myEvent =
 		let startTime = document.getElementById("startTime").value;
 		let endTime = document.getElementById("endTime").value;
 		let eventDetails = document.getElementById("eventDetails").value;
+		let eventPersonnes = document.getElementById("eventPersonnes").value;
 
 		if (!eventName || !startTime || !endTime) {
 			alert("Veuillez remplir tous les champs obligatoires !");
@@ -95,7 +99,8 @@ const myEvent =
 			couleur: eventColor,
 			début: startTime,
 			fin: endTime,
-			détails: eventDetails
+			détails: eventDetails,
+			personnes: eventPersonnes
 		});
     
 
@@ -107,6 +112,7 @@ const myEvent =
 			heure_fin: endTime,
 			color: eventColor,
 			details: eventDetails,
+			personnes : eventPersonnes,
 			ressources: ""
 		};
 	
@@ -148,7 +154,10 @@ const myEvent =
 						divItem = document.createElement('div');
 						lien = document.createElement('a');
 						lien.href="#";
-						divItem.innerHTML = eventName + " <br> " + startTime + " - " + endTime + "<div class=\"square " + eventColor + "\"></div>";
+						if (eventPersonnes > 0)
+							divItem.innerHTML = eventName + " <br> " + startTime + " - " + endTime + "<div class=\"square " + eventColor + "\"><div class=\"person\">" + eventPersonnes + "</div></div>";
+						else
+							divItem.innerHTML = eventName + " <br> " + startTime + " - " + endTime + "<div class=\"square " + eventColor + "\"></div>";
 						eventItem.appendChild(divItem);
 						lien.appendChild(eventItem)
 						eventList.appendChild(lien);
@@ -332,6 +341,9 @@ function editEvent(node,id)
 			const detail = document.querySelector('#eventModal #eventDetails');
 			detail.value = event.details;
 			
+			const persons = document.querySelector('#eventModal #eventPersonnes');
+			persons.value = event.personnes;
+			
 			const color = document.querySelector('#eventModal #eventColor');
 			color.value = event.color;
 
@@ -351,6 +363,7 @@ function editEvent(node,id)
 				detail.disabled=true;
 				startTime.disabled=true;
 				endTime.disabled=true;
+				persons.disabled = true;
 
 				delete_b.classList.remove('visible-button');
 				delete_b.classList.add('hidden-button');

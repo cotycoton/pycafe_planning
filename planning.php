@@ -282,6 +282,22 @@ $currentUser = $mapping[$_SESSION['user_id']];
             background-color: #f39c12 !important;
 
 	}
+	.person
+	{
+		content:attr(value);
+		font-size:12px;
+		color: #000000;
+		background: white;
+		border-radius:50%;
+		border-color:black;
+		padding: 0 5px;
+		position:relative;
+		left:-8px;
+		top:-10px;
+		height:20px;
+		border: 1px solid grey;
+		opacity:0.9;
+	}
 	.square {
 		display: flex;
         	width: 15px;
@@ -290,6 +306,7 @@ $currentUser = $mapping[$_SESSION['user_id']];
 		margin-right:5px;
 		margin-top:2px;
 		float:right;
+		color:black !important;
 	}
 	.red
 	{
@@ -980,9 +997,14 @@ if (isset($_SESSION['user_id'])) {
 						foreach ($events as $event)
 						{
 							$color=$event["color"];
+							$person=$event["personnes"];
+							if ($person == "0")
+								$person = '';
 							echo "<a href=\"#\" onclick=\"editEvent(this," . $event['id'] . ")\"  id=\"href_event_" . $event['id'] . "\"><li class=\"li\"><div class=\"event\" data-param=\"" . $event["id"] . "\">";
-							echo $event['nom'] . "<br>" . $event["heure_debut"] . " - " . $event["heure_fin"] . "<div class=\"square $color\"></div>";
-							echo "</div></li>";
+							echo $event['nom'] . "<br>" . $event["heure_debut"] . " - " . $event["heure_fin"] . "<div class=\"square $color\">";
+							if ($person != '')
+								echo "<div class=\"person\">$person</div>";
+							echo "</div></div></li>";
 						}
 					}
 					echo "</ul></td>"; // Cellules vides pour les lignes sans plages horaires
@@ -1148,7 +1170,19 @@ if (isset($_SESSION['user_id'])) {
 	    </div>
             <label>Je souhaites assurer le service à 2
                 <input id="userService" type="checkbox" name="service" value="accept">
-            </label>
+	    </label>
+	     <div class="mb-3" id="eventChoice">
+                       <label for="eventColo" class="form-label">S'associé à un evenement</label>
+                       <div class="color-select-container">
+                           <div id="indi" class="color-indicator"></div> <!-- Cercle affiché -->
+                           <select class="form-select color-dropdown" id="eventColore">
+                               <option value="red" data-color="red">Rouge</option>
+                               <option value="blue" data-color="blue">Bleu</option>
+                               <option value="green" data-color="green">Vert</option>
+                               <option value="yellow" data-color="yellow">Jaune</option>
+                           </select>
+		       </div>
+            </div>
             <div class="modal-footer">
                 <button id="cancelBtn">Annuler</button>
                 <button id="okBtn">OK</button>

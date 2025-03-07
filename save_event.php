@@ -26,10 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		$data['id'] = intval($data['id']);
 		if ($data['id'] > 0) 
 		{
-			$sql = "UPDATE events SET nom = ?, date_event = ?, heure_debut = ?, heure_fin = ?, details = ?, ressources = ? , color = ? WHERE id = ?";
+			$sql = "UPDATE events SET nom = ?, date_event = ?, heure_debut = ?, heure_fin = ?, details = ?, ressources = ? , color = ? , personnes = ? WHERE id = ?";
 			$stmt = $pdo_event->prepare($sql);
 			//$stmt->bind_param("ssssssi", $data['nom'], $data['date_event'], $data['heure_debut'], $data['heure_fin'], $data['details'], $data['ressources'], $data['id']);
-			$stmt->execute([$data['nom'], $data['date_event'], $data['heure_debut'], $data['heure_fin'], $data['details'], $data['ressources'],$data['color'], $data['id']]);
+			$stmt->execute([$data['nom'], $data['date_event'], $data['heure_debut'], $data['heure_fin'], $data['details'], $data['ressources'],$data['color'],$data['personnes'], $data['id']]);
 
 
 			$rowCount = $stmt->rowCount();
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		//$stmt = $pdo_event->prepare($sql);
 		//$stmt->bind_param("ssssss", $data['nom'], $data['date_event'], $data['heure_debut'], $data['heure_fin'], $data['details'], $data['ressources']);
 		
-		$sql = "INSERT INTO events (nom, date_event, heure_debut, heure_fin, details, color, ressources) VALUES (:nom, :date, :debut, :fin, :details, :color, :ressources)";
+		$sql = "INSERT INTO events (nom, date_event, heure_debut, heure_fin, details, personnes, color, ressources) VALUES (:nom, :date, :debut, :fin, :details, :personnes, :color, :ressources)";
 		$stmt = $pdo_event->prepare($sql);
 		$stmt->bindParam(':nom', $data['nom']);
 		$stmt->bindParam(':date', $data['date_event']);
@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		$stmt->bindParam(':fin', $data['heure_fin']);
 		$stmt->bindParam(':details', $data['details']);
 		$stmt->bindParam(':color', $data['color']);
+		$stmt->bindParam(':personnes', $data['personnes']);
 		$stmt->bindParam(':ressources', $data['ressources']);
 
 		$stmt->execute();

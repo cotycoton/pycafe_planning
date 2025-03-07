@@ -52,6 +52,10 @@
                        </div>
 		   </div>
                     <div class="mb-3">
+    			<label for="eventPersonnes">Nombre de personnes souhaitées</label>
+    			<input type="number" name="nombre" min="0" max="100" step="1" value="1" id="eventPersonnes">
+                    </div>
+                    <div class="mb-3">
                         <label for="startTime" class="form-label">Heure de début</label>
                         <input type="time" class="form-control" id="startTime" required>
                     </div>
