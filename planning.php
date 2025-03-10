@@ -465,7 +465,12 @@ $currentUser = $mapping[$_SESSION['user_id']];
         }
         .modal-header { font-weight: bold; margin-bottom: 15px; display:block;}
         .modal-footer { margin-top: 15px; text-align: right; }
-        .modal-footer button { margin-left: 10px; }
+	.modal-footer button { margin-left: 10px; }
+
+	#eventChoiceContainer
+	{
+		margin-top:10px;
+	}	
 
     </style>
     <link rel="stylesheet" href="event.css"> <!-- Import du CSS personnalisé -->
@@ -667,54 +672,76 @@ $currentUser = $mapping[$_SESSION['user_id']];
 			addButton = document.createElement('button');
 			addButton.innerHTML = '<div>Ajouter&nbsp;&nbsp;&nbsp<i class="bi bi-clipboard-plus"></i></div>';
 			addButton.className = 'action-button add-user';
-			addButton.addEventListener('click', () => {
-			console.log('click current-user ajouter');
-			//const mydiv = document.getElementById('myDiv');
-			//const currentUser = mydiv.getAttribute('data-param');
-			//const connected = mydiv.getAttribute('data-connected');
-			//const admin = mydiv.getAttribute('data-admin');
-			//isAdmin = (admin == "1") && (connected == "1");
-			//let users_yet = [];
-			//let users_all = <?php echo json_encode($users); ?>;
-
-			// necessite etre connecter
-			if (connected == "1") 
+			addButton.addEventListener('click', () => 
 			{
-				console.log("connectec = 1");
-				//const selectedElement = document.querySelector('.selected');
-				//if (selectedElement) 
-				//{
-				//	// Récupère toutes les balises avec la classe "user" à l'intérieur de l'élément sélectionné
-				//	const users = selectedElement.querySelectorAll('.user');
+				console.log('click current-user ajouter');
+			
+				td = addButton.closest('td');
+				date_td = td.id;
+				console.log("closest td",date_td);
+				eventChoice = document.getElementById("eventChoiceContainer");
+				eventChoice.style.display='none';
 
-				//	// Affiche chaque utilisateur trouvé dans la console
-				//	console.log("build users_yet");
-				//	users.forEach
-				//	(
-				//		user => 
-				//		{
-				//			users_yet.push(user.textContent);
-				//			console.log(user.textContent); // Affiche le contenu texte de chaque utilisateur
-				//		}
-				//	);
-				//}
-				//const availableUsers = users_all.filter(user => !users_yet.includes(user));
+				eventSelect = document.getElementById("eventSelect");
+				while (eventSelect.options.length > 0)
+				{
+					eventSelect.remove(0);
+				}
 
-				console.log("users :");
-				console.log(users);
+				getEventsByDate(date_td).then(
+					data => 
+					{
+						if (data) {
+							if (data.success)
+							{
+								console.log("Réservations :", data);
+								eventChoice = document.getElementById("eventChoiceContainer");
+								eventChoice.style.display='block';
+								events = data.events;
+							
+								
+								eventSelect = document.getElementById("eventSelect");
+								const opt1 = document.createElement("option");
+								opt1.text= "Aucun";
+								opt1.dataset.id = -1;
+								eventSelect.add(opt1,null);
+								for (let e = 0; e < events.length;e++)
+								{
+									console.log("event",e,events[e]);
+									const opt1 = document.createElement("option");
+									opt1.text= events[e].nom;
+									opt1.dataset.id = events[e].id;
+									eventSelect.add(opt1,null);
 
-				console.log("users_yet :");
-				console.log(users_yet);
+								}
+							}
+						} else {
+							console.log("Aucune réservation trouvée ou erreur.");
+						}
+					}	
+				);
 
-				console.log("available users :");
-				console.log(availableUsers); // Affiche le contenu texte de chaque utilisateur
 
-				const combo_liste = document.getElementById('userSelect');
-				const users_list = combo_liste.querySelectorAll('.user-poplist');
-				console.log("MAJ users poplist ");
-				users_list.forEach
-				(
-					user => 
+				// necessite etre connecter
+				if (connected == "1") 
+				{
+					console.log("connectec = 1");
+
+					console.log("users :");
+					console.log(users);
+
+					console.log("users_yet :");
+					console.log(users_yet);
+
+					console.log("available users :");
+					console.log(availableUsers); // Affiche le contenu texte de chaque utilisateur
+
+					const combo_liste = document.getElementById('userSelect');
+					const users_list = combo_liste.querySelectorAll('.user-poplist');
+					console.log("MAJ users poplist ");
+					users_list.forEach
+						(
+							user => 
 					{
 						if (availableUsers.includes(user.textContent))
 						{
@@ -731,19 +758,19 @@ $currentUser = $mapping[$_SESSION['user_id']];
 					}
 				);
 
-				const visibleOption = Array.from(combo_liste.options).find(option => {
-				return window.getComputedStyle(option).display !== "none"; // Vérifie le style calculé
+					const visibleOption = Array.from(combo_liste.options).find(option => {
+					return window.getComputedStyle(option).display !== "none"; // Vérifie le style calculé
 				});
 
-				// Définir cet élément comme sélectionné
-				if (visibleOption) {
-					visibleOption.selected = true;
+					// Définir cet élément comme sélectionné
+					if (visibleOption) {
+						visibleOption.selected = true;
+					}
+
+
+					const modal = document.getElementById('userModal');
+					modal.style.display = 'block';
 				}
-
-
-				const modal = document.getElementById('userModal');
-				modal.style.display = 'block';
-			}
 
 			});
 			addButton.classList.remove('visible-button');
@@ -1017,6 +1044,7 @@ if (isset($_SESSION['user_id'])) {
 					$users_resa=[];
 					$users_resa_id=[];
 					$cowork_resa=[];
+					$events_resa=[];
 					if (!empty($reservations)) 
 					{
 						foreach ($reservations as $res) 
@@ -1024,6 +1052,7 @@ if (isset($_SESSION['user_id'])) {
 							$users_resa_id[]=$res['id'];
 							$users_resa[]=$mapping[$res['id']];
 							$cowork_resa[]=$res['cowork'];
+							$events_resa[]=$res['evenements'];
 						}
 						$cellClass = "highlight";
 					}
@@ -1052,6 +1081,13 @@ if (isset($_SESSION['user_id'])) {
 							$cowork = (bool) $cowork_resa[$c];
 							$cowork_html = "";
 							$user_id=$users_resa_id[$c];
+							$event_id=$events_resa[$c];
+							$event = getEventsById($event_id,$pdo_event);
+							$event_color = '';
+							if ($event != NULL)
+							{
+								$event_color= $event['color'];
+							}
 							if ($cowork ==1)
 							{
 								$cowork = "true";
@@ -1062,18 +1098,21 @@ if (isset($_SESSION['user_id'])) {
 							if ($user == $currentUser) 
 							{
 								echo "<li class=\"li\"><div data-cowork=\"$cowork\" data-user_id=\"$user_id\" class=\"current-user\">$cowork_html$user";
+								echo "<div class=\"square $event_color\"></div>";
 								echo "<button onclick=\"removeItemAdmin(this,'" .$user . "'," .$user_id . ")\" class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
 								echo "</div>";
 							}
 							elseif ($isAdmin) 
 							{
 								echo "<li  class=\"li\"><div  data-cowork=\"$cowork\" data-user_id=\"$user_id\"  class=\"user\">$cowork_html$user";
+								echo "<div class=\"square $event_color\"></div>";
 								echo "<button onclick=\"removeItemAdmin(this,'" .$user . "', " .$user_id . ")\"  class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
 								echo "</div>";
 							}
 							else
 							{
 								echo "<li class=\"li\"><div  data-cowork=\"$cowork\" data-user_id=\"$user_id\"  class=\"user\">$cowork_html$user";
+								echo "<div class=\"square $event_color\"></div>";
 								echo "</div>";
 							}
 							echo "</li>";
@@ -1171,15 +1210,11 @@ if (isset($_SESSION['user_id'])) {
             <label>Je souhaites assurer le service à 2
                 <input id="userService" type="checkbox" name="service" value="accept">
 	    </label>
-	     <div class="mb-3" id="eventChoice">
-                       <label for="eventColo" class="form-label">S'associé à un evenement</label>
-                       <div class="color-select-container">
-                           <div id="indi" class="color-indicator"></div> <!-- Cercle affiché -->
-                           <select class="form-select color-dropdown" id="eventColore">
-                               <option value="red" data-color="red">Rouge</option>
-                               <option value="blue" data-color="blue">Bleu</option>
-                               <option value="green" data-color="green">Vert</option>
-                               <option value="yellow" data-color="yellow">Jaune</option>
+	     <div class="mb-3" id="eventChoiceContainer">
+                       <label for="eventChoiceLabel" class="form-label">S'associé à un evenement</label>
+                       <div class="event-select-container">
+                           <!--div id="indi" class="color-indicator"></div--> <!-- Cercle affiché -->
+                           <select class="form-select color-dropdown" id="eventSelect">
                            </select>
 		       </div>
             </div>
@@ -1303,8 +1338,27 @@ if (isset($_SESSION['user_id'])) {
 	    prenom_resa = "";
 	    console.log("mapping_inv",mapping_inv);
 	    id_resa = mapping_inv[selectedUser];
+	    eventSelect = document.getElementById("eventSelect");
+
+
+
+	    // Vérifier si une option est sélectionnée
+	    let dataId = -1;
+	    let colorEvent = '';
+	    if (eventSelect.options.length > 0 && eventSelect.selectedIndex !== -1) {
+		    const selectedOption = eventSelect.options[eventSelect.selectedIndex]; // Récupérer l'option sélectionnée
+		    const value = selectedOption.value; // Récupérer la valeur
+		    dataId = selectedOption.getAttribute("data-id"); // Récupérer l'attribut data-param
+		    
+		    console.log("Valeur sélectionnée :", value);
+		    console.log("Data-param :", dataId);
+	    } else {
+		    console.log("Aucune option disponible ou sélectionnée.");
+	    }
+
+
 	    console.log("save db id",id_resa);
-	    ajouterReservation(date_resa, plage_resa, id_resa, nom_resa, prenom_resa, cowork_resa, detail_resa);
+	    ajouterReservation(date_resa, plage_resa, id_resa, nom_resa, prenom_resa, cowork_resa, detail_resa,dataId);
 	    console.log("save ok");
 
 	    userDiv.textContent = userToAdd;
@@ -1326,6 +1380,30 @@ if (isset($_SESSION['user_id'])) {
 
 	    const contentHtml = "<button onclick=\"removeItemAdmin(this,'" + userToAdd + "'," + id_resa +")\" class=\"action-button remove-user hidden-button\"><i class=\"bi bi-trash\"></i></button>";
 	    //	userDiv.innerHTML += contentHtml;
+	    div_square = document.createElement("div");
+	    if (dataId != -1)
+	    {
+//		await asyncGetEventsById(date_td).then(
+//					data => 
+//	    				{
+//						colorEvent = data.color;
+//					}
+//					)
+//				);
+//
+	    	getEventById(dataId).then(
+			    event => 
+		    		{
+					if (event) {
+						colorEvent = event.color;
+	    					div_square.className = "square " + colorEvent;
+						console.log("colorEvent",colorEvent);
+					}
+		    		}
+	    	);
+	    }
+
+	    userDiv.appendChild(div_square);
 	    userDiv.appendChild(removeButton);
 	    removeButton.setAttribute('onclick', "removeItemAdmin(this, '"+userToAdd+ "'," + id_resa + ")");
 	    //removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));

@@ -21,7 +21,7 @@ try {
  * @return array        Tableau contenant les réservations
  */
 function getReservations($date, $plage, $pdo_planning) {
-    $sql = "SELECT id, nom, prenom, commentaire, cowork 
+    $sql = "SELECT id, nom, prenom, commentaire, cowork, evenements 
             FROM reservations 
             WHERE date_reservation = :date AND plage_horaire = :plage";
     $stmt = $pdo_planning->prepare($sql);

@@ -21,6 +21,8 @@ CREATE TABLE reservations (
 CREATE INDEX idx_reservation ON reservations(date_reservation, plage_horaire);
 
 
+ALTER TABLE reservations ADD COLUMN evenements JSON DEFAULT NULL;
+
 SELECT * FROM reservations;
 
 

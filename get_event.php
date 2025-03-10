@@ -26,7 +26,22 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     } else {
         echo json_encode(["success" => false, "error" => "Aucun événement trouvé"]);
     }
-} else {
+}
+else if (isset($_GET['date']) ) {
+    $date = $_GET['date'];
+    $sql = "SELECT * FROM events WHERE date_event = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $events = $result->fetch_all(MYSQLI_ASSOC);
+    if ($events) {
+        echo json_encode(["success" => true, "events" => $events], JSON_UNESCAPED_UNICODE);
+    } else {
+        echo json_encode(["success" => false, "error" => "Aucun événement trouvé"]);
+    }
+}
+else {
     echo json_encode(["success" => false, "error" => "ID invalide"]);
 }
 ?>

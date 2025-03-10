@@ -1,0 +1,76 @@
+-- SQL: Création de la base de données et de la table events
+CREATE DATABASE EPICAFE_events;
+USE EPICAFE_events;
+
+CREATE TABLE events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(255) NOT NULL,
+    date_event DATE NOT NULL,
+    heure_debut TIME NOT NULL,
+    heure_fin TIME NOT NULL,
+    details TEXT,
+    ressources VARCHAR(255)
+);
+
+
+CREATE DATABASE EPICAFE_events;
+USE EPICAFE_events;
+
+CREATE TABLE events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(255) NOT NULL,
+    date_event VARCHAR(10) NOT NULL,
+    heure_debut VARCHAR(5) NOT NULL,
+    heure_fin VARCHAR(5) NOT NULL,
+    color VARCHAR(20) NOT NULL,
+    details TEXT,
+    ressources VARCHAR(255)
+);
+
+ALTER TABLE events ADD COLUMN personnes INT NOT NULL DEFAULT 1;
+
+
+-- PHP: Récupérer les événements d'une date donnée
+<?php
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "EPICAFE_events";
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+if ($conn->connect_error) {
+    die("Connexion échouée: " . $conn->connect_error);
+}
+
+function getEventsByDate($date) {
+    global $conn;
+    $sql = "SELECT * FROM events WHERE date_event = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $date);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $events = $result->fetch_all(MYSQLI_ASSOC);
+    echo json_encode($events);
+}
+
+if (isset($_GET['date'])) {
+    getEventsByDate($_GET['date']);
+}
+?>
+
+<!-- JavaScript: Fonction pour enregistrer ou mettre à jour un événement -->
+<script>
+function saveOrUpdateEvent(eventData) {
+    fetch('save_event.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData)
+    })
+    .then(response => response.json())
+    .then(data => console.log('Succès:', data))
+    .catch(error => console.error('Erreur:', error));
+}
+</script>
+
+
+

@@ -87,8 +87,9 @@ function getEventsById($id,$pdo_event) {
     $stmt->bindParam(':id', $id);
     //$stmt->bind_param("s", $date);
     $stmt->execute();
-    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return $events;
+    //$events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $event = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $event;
     $result = $stmt->get_result();
     //return print_r($stmt);
     $events = $result->fetch_all(MYSQLI_ASSOC);

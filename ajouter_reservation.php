@@ -14,12 +14,13 @@ try {
     $data = json_decode(file_get_contents("php://input"), true);
 
     // Vérification des champs requis
-    if (isset($data['date'], $data['plage'], $data['id'], $data['nom'], $data['prenom'], $data['cowork'], $data['commentaire'])) {
+    if (isset($data['date'], $data['plage'], $data['id'], $data['nom'], $data['prenom'], $data['cowork'], $data['commentaire'], $data['events'])) {
         $date = $data['date'];
         $plage = $data['plage'];
         $id = $data['id'];
         $nom = $data['nom'];
-        $prenom = $data['prenom'];
+	$prenom = $data['prenom'];
+	$events = $data['events'];
         $cowork = filter_var($data['cowork'], FILTER_VALIDATE_BOOLEAN); // Convertit en booléen
         $commentaire = $data['commentaire'];
 
@@ -38,8 +39,10 @@ try {
         }
 
         // Requête d'insertion SQL
-        $sql = "INSERT INTO reservations (date_reservation, plage_horaire, id, nom, prenom, commentaire, cowork) 
-                VALUES (:date, :plage, :id, :nom, :prenom, :commentaire, :cowork)";
+        $sql = "INSERT INTO reservations (date_reservation, plage_horaire, id, nom, prenom, commentaire, cowork, evenements) 
+                VALUES (:date, :plage, :id, :nom, :prenom, :commentaire, :cowork, :evenements)";
+        //$sql = "INSERT INTO reservations (date_reservation, plage_horaire, id, nom, prenom, commentaire, cowork) 
+        //        VALUES (:date, :plage, :id, :nom, :prenom, :commentaire, :cowork )";
 
         $stmt = $pdo_planning->prepare($sql);
         $stmt->bindParam(':date', $date);
@@ -49,6 +52,7 @@ try {
         $stmt->bindParam(':prenom', $prenom);
         $stmt->bindParam(':commentaire', $commentaire);
         $stmt->bindParam(':cowork', $cowork, PDO::PARAM_BOOL);
+        $stmt->bindValue(':evenements', $events, PDO::PARAM_STR);
 
         // Exécution et retour JSON
         if ($stmt->execute()) {

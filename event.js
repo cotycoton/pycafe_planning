@@ -259,6 +259,8 @@ async function deleteEvent(eventId) {
 	}
 }
 
+
+
 function getEventById(eventId) {
     return fetch('get_event.php?id=' + eventId)
         .then(response => {
@@ -279,6 +281,49 @@ function getEventById(eventId) {
         });
 }
 
+async function asyncGetEventById(eventId) {
+
+	
+    const url = `get_event.php?id=${encodeURIComponent(eventId)}`;
+    console.log('url',url);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP : ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("data",data); // Affiche les résultats dans la console
+
+        return data; // Retourne les données récupérées
+    } catch (error) {
+        console.error("Erreur lors de la récupération des réservations :", error);
+        return null;
+    }
+
+}
+async function getEventsByDate(eventDate) {
+	
+	
+    const url = `get_event.php?date=${encodeURIComponent(eventDate)}`;
+    console.log('url',url);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP : ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("data",data); // Affiche les résultats dans la console
+
+        return data; // Retourne les données récupérées
+    } catch (error) {
+        console.error("Erreur lors de la récupération des réservations :", error);
+        return null;
+    }
+
+}
+
 
 
 function editEvent(node,id)
@@ -287,8 +332,6 @@ function editEvent(node,id)
 	// Exemple d'utilisation
 	getEventById(id).then(event => {
 		if (event) {
-
-
 
 			console.log("Nom de l'événement:", event.nom);
 			//let modal = document.getElementById('eventModal');
@@ -385,3 +428,35 @@ function editEvent(node,id)
 
 
 }
+
+
+//
+//
+//const { Pool } = require('pg');
+//
+//// Configuration de la connexion PostgreSQL
+//const pool = new Pool({
+//    user: 'root',
+//    host: 'localhost',
+//    database: 'EPICAFE_events',
+//    password: '',
+//    port: 5432, // Port par défaut de PostgreSQL
+//});
+//
+//async function getEventsByDate(date) {
+//    const sql = "SELECT * FROM events WHERE date_event = $1";
+//    try {
+//        const result = await pool.query(sql, [date]);
+//        return result.rows; // Retourne les événements sous forme de tableau d'objets
+//    } catch (error) {
+//        console.error("Erreur lors de la récupération des événements :", error);
+//        return [];
+//    }
+//}
+//
+////// Exemple d'utilisation
+////async function main() {
+////    const events = await getEventsByDate('2025-03-09');
+////    console.log(events);
+////}
+//

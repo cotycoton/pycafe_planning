@@ -1,4 +1,4 @@
-async function ajouterReservation(date, plage, id, nom, prenom, cowork, commentaire) {
+async function ajouterReservation(date, plage, id, nom, prenom, cowork, commentaire, events) {
     const url = "ajouter_reservation.php"; // Adapter selon votre serveur
     const data = {
         date: date,
@@ -7,7 +7,8 @@ async function ajouterReservation(date, plage, id, nom, prenom, cowork, commenta
         nom: nom,
         prenom: prenom,
         cowork: cowork,
-        commentaire: commentaire
+        commentaire: commentaire,
+	events: events
     };
 
     console.log(data);
