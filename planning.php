@@ -302,7 +302,7 @@ $currentUser = $mapping[$_SESSION['user_id']];
 		display: flex;
         	width: 15px;
 		height: 15px;
-		margin-left:5px;
+		#margin-left:5px;
 		margin-right:5px;
 		margin-top:2px;
 		float:right;
@@ -384,7 +384,7 @@ $currentUser = $mapping[$_SESSION['user_id']];
 	    font-size: 0.8rem;
         }
         .action-button {
-            margin-left: 5px;
+            #margin-left: 5px;
             background-color: transparent;
             border: none;
             cursor: progress;
@@ -462,7 +462,15 @@ $currentUser = $mapping[$_SESSION['user_id']];
             padding: 20px;
             border: 1px solid #888;
             width: 550px;
+	}
+	.modal-content-help {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 750px;
         }
+
         .modal-header { font-weight: bold; margin-bottom: 15px; display:block;}
         .modal-footer { margin-top: 15px; text-align: right; }
 	.modal-footer button { margin-left: 10px; }
@@ -1098,21 +1106,24 @@ if (isset($_SESSION['user_id'])) {
 							if ($user == $currentUser) 
 							{
 								echo "<li class=\"li\"><div data-cowork=\"$cowork\" data-user_id=\"$user_id\" class=\"current-user\">$cowork_html$user";
-								echo "<div class=\"square $event_color\"></div>";
+								if ($event_color != '')
+									echo "<div class=\"square $event_color\"></div>";
 								echo "<button onclick=\"removeItemAdmin(this,'" .$user . "'," .$user_id . ")\" class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
 								echo "</div>";
 							}
 							elseif ($isAdmin) 
 							{
 								echo "<li  class=\"li\"><div  data-cowork=\"$cowork\" data-user_id=\"$user_id\"  class=\"user\">$cowork_html$user";
-								echo "<div class=\"square $event_color\"></div>";
+								if ($event_color != '')
+									echo "<div class=\"square $event_color\"></div>";
 								echo "<button onclick=\"removeItemAdmin(this,'" .$user . "', " .$user_id . ")\"  class='action-button remove-user hidden-button'><i class='bi bi-trash'></i></button>";
 								echo "</div>";
 							}
 							else
 							{
 								echo "<li class=\"li\"><div  data-cowork=\"$cowork\" data-user_id=\"$user_id\"  class=\"user\">$cowork_html$user";
-								echo "<div class=\"square $event_color\"></div>";
+								if ($event_color != '')
+									echo "<div class=\"square $event_color\"></div>";
 								echo "</div>";
 							}
 							echo "</li>";
@@ -1141,7 +1152,7 @@ if (isset($_SESSION['user_id'])) {
 	if (($_SESSION['user_role']=="admin") ||($_SESSION["user_role"]=="superadmin"))
 	{
 		//echo "- <a href=\"#\" onclick=\"cleanSelected()\" id=\"toggleEditMode\" >Edit mode</a> - ";
-		echo "<button class=\"btn btn-light\" onclick=\"cleanSelected()\" id=\"toggleEditMode\" >Edit mode</button>";
+		echo "<button class=\"btn btn-light\" onclick=\"cleanSelected()\" id=\"toggleEditMode\" >Activer Edition créneau</button>";
     		echo "<button class=\"btn btn-light\" onclick=\"openModal()\">Créer un événement</button></p>";
 	}
 	echo "</div>";
@@ -1149,6 +1160,7 @@ if (isset($_SESSION['user_id'])) {
 	if (($_SESSION['user_role']=="admin") ||($_SESSION["user_role"]=="superadmin"))
 		echo " (admin) " ;
 	echo "- <a href=\"logout.php\">Déconnexion</a>";
+	echo "<button class=\"btn btn-light\" id=\"openModalBtn\" onclick=\"openModalHelp()\" >Afficher la documentation</button>";
 	echo "</i></p>";
 } else {
     echo "<p align=\"center\">Accès en lecture seul, veuillez vous <a href=\"login2.php\">connecter</a></p>";
@@ -1175,9 +1187,9 @@ if (isset($_SESSION['user_id'])) {
 
 				// Changer le texte du lien en fonction de la valeur de la variable
 				if (editMode === 1) {
-					link.textContent = 'Désactiver Edit Mode';
+					link.textContent = 'Désactiver Edit créneau';
 				} else {
-					link.textContent = 'Activer Edit Mode';
+					link.textContent = 'Activer Edition créneau';
 				}
 
 				// Afficher la valeur de la variable dans la console (pour le débogage)
@@ -1211,7 +1223,7 @@ if (isset($_SESSION['user_id'])) {
                 <input id="userService" type="checkbox" name="service" value="accept">
 	    </label>
 	     <div class="mb-3" id="eventChoiceContainer">
-                       <label for="eventChoiceLabel" class="form-label">S'associé à un evenement</label>
+                       <label for="eventChoiceLabel" class="form-label">S'associer à un evenement</label>
                        <div class="event-select-container">
                            <!--div id="indi" class="color-indicator"></div--> <!-- Cercle affiché -->
                            <select class="form-select color-dropdown" id="eventSelect">
@@ -1238,6 +1250,9 @@ if (isset($_SESSION['user_id'])) {
     
 	<!-- Conteneur où la modale sera chargée -->
     <div id="modalContainer">
+    </div>
+    <div id="modalHelp">
+            <?php include 'help.php'; ?>
     </div>
 
     <!--?php include "event.php" ?-->
@@ -1396,6 +1411,7 @@ if (isset($_SESSION['user_id'])) {
 		    		{
 					if (event) {
 						colorEvent = event.color;
+						userDiv.appendChild(div_square);
 	    					div_square.className = "square " + colorEvent;
 						console.log("colorEvent",colorEvent);
 					}
@@ -1403,7 +1419,6 @@ if (isset($_SESSION['user_id'])) {
 	    	);
 	    }
 
-	    userDiv.appendChild(div_square);
 	    userDiv.appendChild(removeButton);
 	    removeButton.setAttribute('onclick', "removeItemAdmin(this, '"+userToAdd+ "'," + id_resa + ")");
 	    //removeButton.addEventListener('click', () => removeItemAdmin(removeButton,userToAdd));
@@ -1526,6 +1541,7 @@ if (isset($_SESSION['user_id'])) {
     </script>
     <!--script src="event.js" defer></script--> <!-- Import du JS -->
     <script src="event.js"></script> <!-- Import du JS -->
+    <script src="help.js"></script> <!-- Import du JS -->
 
 </body>
 </html>
