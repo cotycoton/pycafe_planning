@@ -1,0 +1,37 @@
+
+/* Style des images avant leur chargement */
+.lazy-load {
+    display: none;
+    width: 100%;
+    height: auto;
+}
+
+img,svg {
+    display: none;
+    width: 100%;
+    height: auto;
+}
+
+/* Vous pouvez ajouter un effet de chargement, si nécessaire */
+.lazy-load.loading {
+    display: block;
+    width: 100%;
+}
+
+.jaune
+{
+	background-color:yellow;
+}
+figure {
+    text-align: center;
+}
+  figcaption {
+    font-style: italic;
+    color: gray;
+    text-align: center;
+  }
+
+.modal-dialog
+{
+	max-width:fit-content;
+}

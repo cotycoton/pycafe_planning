@@ -482,6 +482,7 @@ $currentUser = $mapping[$_SESSION['user_id']];
 
     </style>
     <link rel="stylesheet" href="event.css"> <!-- Import du CSS personnalisé -->
+    <link rel="stylesheet" href="help.css"> <!-- Import du CSS personnalisé -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="db_planning_add.js"></script> <!-- Import du JS -->
     <script>
