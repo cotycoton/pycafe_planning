@@ -4,7 +4,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	$host = "localhost";
 	$username = "root";
 	$password = "";
-	$dbname = "EPICAFE_events";
+	$dbname = "EPICAFE_planning";
 
 	try
 	{

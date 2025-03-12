@@ -1,6 +1,6 @@
 <?php
 function getOuverture($date, $plage_horaire) {
-	$dbname = "gestion_coworking";
+	$dbname = "EPICAFE_planning";
 	$username = "root"; // À adapter selon votre configuration
 	$password = ""; // À adapter selon votre configuration
 	$servername = "localhost";

@@ -1,7 +1,7 @@
 <?php
 // Paramètres de connexion à la base de données
 $host = "localhost";
-$dbname = "gestion_coworking";
+$dbname = "EPICAFE_planning";
 $username = "root"; // Adapter selon votre configuration
 $password = ""; // Adapter selon votre configuration
 

@@ -1,6 +1,6 @@
 <?php
 $host = 'localhost';
-$dbname = 'EPICAFE_LOGIN';
+$dbname = 'EPICAFE_planning';
 $username = 'root';
 $password = '';
 
@@ -12,7 +12,7 @@ try {
 }
 
 $host = "localhost";
-$dbname = "gestion_coworking";
+$dbname = "EPICAFE_planning";
 $username = "root"; // Modifier si nécessaire
 $password = ""; // Modifier si nécessaire
 
@@ -27,7 +27,7 @@ try {
 $host = "localhost";
 $username = "root";
 $password = "";
-$dbname = "EPICAFE_events";
+$dbname = "EPICAFE_planning";
 
 try
 {

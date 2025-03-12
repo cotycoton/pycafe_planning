@@ -51,7 +51,7 @@ db_config = {
     'host': 'localhost',  # Modifier selon votre configuration
     'user': 'root',       # Modifier selon votre utilisateur MySQL
     'password': '', # Modifier avec votre mot de passe
-    'database': 'EPICAFE_LOGIN', # Modifier avec votre nom de base de données
+    'database': 'EPICAFE_planning', # Modifier avec votre nom de base de données
     'raise_on_warnings': True
 }
 

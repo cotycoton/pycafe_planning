@@ -429,34 +429,3 @@ function editEvent(node,id)
 
 }
 
-
-//
-//
-//const { Pool } = require('pg');
-//
-//// Configuration de la connexion PostgreSQL
-//const pool = new Pool({
-//    user: 'root',
-//    host: 'localhost',
-//    database: 'EPICAFE_events',
-//    password: '',
-//    port: 5432, // Port par défaut de PostgreSQL
-//});
-//
-//async function getEventsByDate(date) {
-//    const sql = "SELECT * FROM events WHERE date_event = $1";
-//    try {
-//        const result = await pool.query(sql, [date]);
-//        return result.rows; // Retourne les événements sous forme de tableau d'objets
-//    } catch (error) {
-//        console.error("Erreur lors de la récupération des événements :", error);
-//        return [];
-//    }
-//}
-//
-////// Exemple d'utilisation
-////async function main() {
-////    const events = await getEventsByDate('2025-03-09');
-////    console.log(events);
-////}
-//
