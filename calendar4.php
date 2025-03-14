@@ -55,12 +55,33 @@ function generateCalendar($month, $year, $highlightWeek = null) {
     }
     $daysInPrevMonth = date("t", strtotime("$prevYear-$prevMonth-01"));
 
+    $dateStringP = "$prevYear-$prevMonth-15";
+    $dateStringA = "$nextYear-$nextMonth-15";
+    $weekNumberP = date("W", strtotime($dateStringP));
+    $weekNumberA = date("W", strtotime($dateStringA));
+    $Pyear_week = date("o", strtotime($dateStringP));
+    $Ayear_week = date("o", strtotime($dateStringA));
     // Construire le calendrier
     $moisF = getMoisFrancais((int)$month);
+    $moisF_before = getMoisFrancais((int)$prevMonth);
+    $moisF_after = getMoisFrancais((int)$nextMonth);
     echo "<div>";
-    echo "<div align=\"center\">$moisF $year</div>";
-    echo "<table border='1' style='border-collapse: collapse; text-align: center;' class=\"calendrier\">";
-    echo "<tr><th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th><th>Sam</th><th>Dim</th></tr>";
+    echo "	<div class=\"cont-nav-arrows-month\">";
+    echo "		<div align=\"center\">$moisF $year</div>";
+    echo "		<div class=\"nav-arrows-month\">";
+    echo "			<div onclick=\"window.location='planning.php?week=" . $weekNumberP . "&year=". $Pyear_week . "'\" >";
+    echo "				<i class=\"bi bi-caret-up-fill \"></i>";
+    echo "			</div>";
+    echo "			<div onclick=\"window.location='planning.php?week=" . $weekNumberA . "&year=". $Ayear_week . "'\" >";
+    echo "				<i class=\"bi bi-caret-down-fill \"></i>";
+    echo "			</div>";
+    echo "		</div>";
+    echo "	</div>";
+    echo "	<div class=\"container_cal\">";
+    echo "		<div class=\"vertical-text\">$moisF_before $prevYear</div>";
+    echo "		<div>";
+    echo "			<table border='1' style='border-collapse: collapse; text-align: center;' class=\"calendrier\">";
+    echo "			<tr><th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th><th>Sam</th><th>Dim</th></tr>";
 
     $currentWeekNumber = null;
 
@@ -125,7 +146,10 @@ function generateCalendar($month, $year, $highlightWeek = null) {
         echo "<td style='color: grey; $highlightStyle $todayStyle'>$i</td>";
     }
 
-    echo "</tr></table>";
+    echo "			</tr></table>";
+    echo "		</div>";
+    echo "		<div class=\"vertical-text\">$moisF_after $nextYear</div>";
+    echo "	</div>";
     echo "</div>";
 }
 

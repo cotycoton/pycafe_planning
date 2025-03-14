@@ -9,7 +9,7 @@ session_start();
 //    die("Accès refusé. Vous devez être administrateur pour voir cette page.");
 //}
 
-$stmt = $pdo->query("SELECT id, firstname, lastname, email, phone, active FROM users");
+$stmt = $pdo->query("SELECT id, firstname, lastname, email, phone, active , role FROM users");
 $users = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
@@ -30,6 +30,8 @@ $users = $stmt->fetchAll();
             <th>Téléphone</th>
             <th>Statut</th>
             <th>Actions</th>
+            <th>Role</th>
+            <th>Actions</th>
         </tr>
         <?php foreach ($users as $user): ?>
             <tr>
@@ -41,7 +43,19 @@ $users = $stmt->fetchAll();
                 <td><?php echo $user['active'] ? 'Actif' : 'Inactif'; ?></td>
                 <td>
                     <?php if (!$user['active']): ?>
-                        <a href="activate_user.php?id=<?php echo $user['id']; ?>">Activer</a>
+                        <a href="activate_user.php?id=<?php echo $user['id']; ?>">activer</a>
+                    <?php endif; ?>
+                    <?php if ($user['active']): ?>
+                        <a href="deactivate_user.php?id=<?php echo $user['id']; ?>">désactiver</a>
+                    <?php endif; ?>
+                </td>
+                <td><?php echo htmlspecialchars($user['role']); ?></td>
+                <td>
+                    <?php if ($user['role']=='user'): ?>
+                        <a href="set_admiin.php?id=<?php echo $user['id']; ?>">set admin</a>
+                    <?php endif; ?>
+                    <?php if ($user['role']=='admin'): ?>
+                        <a href="set_user.php?id=<?php echo $user['id']; ?>">set user</a>
                     <?php endif; ?>
                 </td>
             </tr>

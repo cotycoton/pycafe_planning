@@ -30,8 +30,14 @@ ALTER TABLE users MODIFY COLUMN role ENUM('user', 'admin', 'superadmin') NOT NUL
 UPDATE users SET role = 'admin' WHERE email = 'julien.montagnier@gmail.com';
 
 
+UPDATE users SET prenom = 'Nicole', nom = 'Mengual' WHERE email = 'nicmengual@gmail.com';
+UPDATE users SET prenom = 'Nicole', nom = '__' WHERE email = 'nmengual@free.fr';
+
 SELECT * FROM users;
 
+UPDATE users
+SET prenom = 'Nicole', nom = 'Mengual'
+WHERE email = 'nicmengual@gmail.com';
 
 UPDATE users
 SET prenom = 'admin', nom = ''
@@ -40,3 +46,8 @@ WHERE email = 'julien.montagnier@gmail.com';
 
 ALTER TABLE users
 ADD remember_token VARCHAR(255);
+
+
+ALTER TABLE reservations
+ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;

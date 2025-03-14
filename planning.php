@@ -35,7 +35,7 @@ if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember_me'])) {
 try {
     // Récupérer tous les utilisateurs sauf ceux avec le rôle 'admin'
     //$stmt = $pdo->prepare("SELECT id, firstname, lastname, email, phone FROM users WHERE role != 'admin'");
-    $stmt = $pdo->prepare("SELECT id, firstname, lastname, email, phone FROM users WHERE role !='superadmin'");
+    $stmt = $pdo->prepare("SELECT id, firstname, lastname, email, phone FROM users WHERE role !='superadmin' AND active = 1");
     $stmt->execute();
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -483,6 +483,7 @@ $currentUser = $mapping[$_SESSION['user_id']];
     </style>
     <link rel="stylesheet" href="event.css"> <!-- Import du CSS personnalisé -->
     <link rel="stylesheet" href="help.css"> <!-- Import du CSS personnalisé -->
+    <link rel="stylesheet" href="calendar4.css"> <!-- Import du CSS personnalisé -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="db_planning_add.js"></script> <!-- Import du JS -->
     <script>

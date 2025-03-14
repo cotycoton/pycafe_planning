@@ -1,0 +1,50 @@
+
+        .vertical-text {
+            writing-mode: vertical-rl; /* Texte vertical de haut en bas */
+            text-orientation: mixed;
+	    color: grey;
+            border: 1px solid grey;
+            #padding: 10px;
+            margin-left: 10px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            margin-right: 10px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px; /* Largeur fixe */
+	    display:none;
+        }
+        .nav-arrows-month {
+            display: flex;
+            justify-content: space-evenly;
+	    align-items: center;
+	    margin-top:2px;
+	    width:40%;   
+	    #display:none;
+        }
+	.cont-nav-arrows-month {
+            display: flex;
+            justify-content: space-between;
+	    align-items: center;
+            margin-left: 10px;
+	    margin-top:2px;
+	    width:100%;   
+        }
+
+	.container_cal {
+            display: flex;
+            align-items: stretch; /* Étire les divs latéraux pour s'aligner avec la table */
+            border: 0px solid #ccc;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 5px;
+        }
+
+        .content {
+
+            flex: 1; /* Prend toute la place restante */
+            padding: 10px;
+            border: 1px solid gray;
+        }
