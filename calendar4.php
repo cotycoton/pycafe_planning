@@ -55,8 +55,8 @@ function generateCalendar($month, $year, $highlightWeek = null) {
     }
     $daysInPrevMonth = date("t", strtotime("$prevYear-$prevMonth-01"));
 
-    $dateStringP = "$prevYear-$prevMonth-15";
-    $dateStringA = "$nextYear-$nextMonth-15";
+    $dateStringP = "$prevYear-$prevMonth-1";
+    $dateStringA = "$nextYear-$nextMonth-1";
     $weekNumberP = date("W", strtotime($dateStringP));
     $weekNumberA = date("W", strtotime($dateStringA));
     $Pyear_week = date("o", strtotime($dateStringP));
