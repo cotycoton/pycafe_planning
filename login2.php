@@ -93,7 +93,7 @@ if (isset($_SESSION['user_id'])) {
 		<input style="display:inline-block;width:10%;" type="checkbox" id="showPassword">
 		</label>
 		</div>
-		<div class="div_label"">
+		<div class="div_label">
                 <label> Se souvenir de moi <input style="display:inline-block;width:10%;" type="checkbox" name="remember_me">
                  </label>
 		</div>
