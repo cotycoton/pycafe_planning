@@ -8,7 +8,9 @@ require 'vendor/autoload.php';
 
 function sendPasswordResetEmail($email, $token) {
 	$mail = new PHPMailer(true);
-    try {
+	$mail->CharSet = 'UTF-8';
+	try {
+
         // Configuration du serveur SMTP
         $mail->isSMTP();
 	
@@ -26,10 +28,11 @@ function sendPasswordResetEmail($email, $token) {
 
         // Contenu de l'email
         $mail->isHTML(true);
-        $mail->Subject = 'Réinitialisation de votre mot de passe';
-	$mail->Body    = "<p>Cliquez sur le lien suivant pour réinitialiser votre mot de passe :</p>
-			  <p>https://telegraphe-optifluides.fr/epicafe/planning/reset_password.php?token=$token</p>
-                         <p><a href='https://telegraphe-optifluides.fr/epicafe/planning/reset_password.php?token=$token'>Réinitialiser le mot de passe</a></p>";
+	$subject = 'Réinitialisation mot de passe planning EPICAFE';
+	$mail->Subject = "=?UTF-8?B?" . base64_encode($subject) . "?=\r\n";
+
+	$mail->Body    = "<p>Cliquez sur le lien suivant pour r&eacute;initialiser votre mot de passe :</p>
+                         <p><a href='https://www.telegraphe-optifluides.fr/planning-epicafe/reset_password.php?token=$token'>R&eacute;initialiser le mot de passe</a></p>";
 
         $mail->send();
         return true;
