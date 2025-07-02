@@ -1161,8 +1161,12 @@ if (isset($_SESSION['user_id'])) {
 	echo "<p align=\"center\"><i>Connecté en tant que " . htmlspecialchars($_SESSION['user_name']);
 	if (($_SESSION['user_role']=="admin") ||($_SESSION["user_role"]=="superadmin"))
 		echo " (admin) " ;
+        //echo "<div class=\"container mt-5\">";
+        //echo "<button class=\"btn btn-light\" data-toggle=\"modal\" data-target=\"#eventModal\">Voir les événements</button>";
+        //echo "</div>";
+	echo " -<button class=\"btn btn-light\" id=\"openSEModalBtn\" onclick=\"openModalShowEvents()\" >Liste des Evenements</button>";
+	echo "-<button class=\"btn btn-light\" id=\"openModalBtn\" onclick=\"openModalHelp()\" >Afficher la documentation</button>";
 	echo "- <a href=\"logout.php\">Déconnexion</a>";
-	echo "<button class=\"btn btn-light\" id=\"openModalBtn\" onclick=\"openModalHelp()\" >Afficher la documentation</button>";
 	echo "</i></p>";
 } else {
     echo "<p align=\"center\">Accès en lecture seul, veuillez vous <a href=\"login2.php\">connecter</a></p>";
@@ -1255,6 +1259,9 @@ if (isset($_SESSION['user_id'])) {
     </div>
     <div id="modalHelp">
             <?php include 'help.php'; ?>
+    </div>
+    <div id="modalEventsShow">
+            <?php include 'event_modal.php'; ?>
     </div>
 
     <!--?php include "event.php" ?-->
@@ -1544,6 +1551,7 @@ if (isset($_SESSION['user_id'])) {
     <!--script src="event.js" defer></script--> <!-- Import du JS -->
     <script src="event.js"></script> <!-- Import du JS -->
     <script src="help.js"></script> <!-- Import du JS -->
+    <script src="events_modal.js"></script> <!-- Import du JS -->
 
 </body>
 </html>

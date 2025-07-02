@@ -52,7 +52,7 @@ $users = $stmt->fetchAll();
                 <td><?php echo htmlspecialchars($user['role']); ?></td>
                 <td>
                     <?php if ($user['role']=='user'): ?>
-                        <a href="set_admiin.php?id=<?php echo $user['id']; ?>">set admin</a>
+                        <a href="set_admin.php?id=<?php echo $user['id']; ?>">set admin</a>
                     <?php endif; ?>
                     <?php if ($user['role']=='admin'): ?>
                         <a href="set_user.php?id=<?php echo $user['id']; ?>">set user</a>

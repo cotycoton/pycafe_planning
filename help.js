@@ -54,7 +54,6 @@ window.onclick = function(event) {
 
 function openModalHelp() {
 	let modal = new bootstrap.Modal(document.getElementById('modal-help'));
-    	console.log("Aide");
 	modal.show();
     loadImages(); // Charger les images lorsque la modale est affichée
 
