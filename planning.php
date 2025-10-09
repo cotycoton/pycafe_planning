@@ -700,7 +700,7 @@ $currentUser = $mapping[$_SESSION['user_id']];
 
 				getEventsByDate(date_td).then(
 					data => 
-					{
+				{
 						if (data) {
 							if (data.success)
 							{
@@ -1169,7 +1169,8 @@ if (isset($_SESSION['user_id'])) {
 	echo "- <a href=\"logout.php\">Déconnexion</a>";
 	echo "</i></p>";
 } else {
-    echo "<p align=\"center\">Accès en lecture seul, veuillez vous <a href=\"login2.php\">connecter</a></p>";
+	echo "<p align=\"center\">Accès en lecture seul, veuillez vous <a href=\"login2.php\">connecter</a>";
+    echo "<button class=\"btn btn-light\" id=\"openSEModalBtn\" onclick=\"openModalShowEvents()\" >Liste des Evenements</button></p>";
 
 }
 ?>
