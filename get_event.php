@@ -31,7 +31,7 @@ else if (isset($_GET['date']) ) {
     $date = $_GET['date'];
     $sql = "SELECT * FROM events WHERE date_event = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $date);
+    $stmt->bind_param("s", $date);
     $stmt->execute();
     $result = $stmt->get_result();
     $events = $result->fetch_all(MYSQLI_ASSOC);
