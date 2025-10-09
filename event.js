@@ -306,7 +306,7 @@ async function getEventsByDate(eventDate) {
 	
 	
     const url = `get_event.php?date=${encodeURIComponent(eventDate)}`;
-    console.log('url',url);
+    console.log('getEventsByDate url',url);
     try {
         const response = await fetch(url);
         if (!response.ok) {
