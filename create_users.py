@@ -56,5 +56,6 @@ db_config = {
 }
 
 # Exécuter l'importation
-import_users_from_csv('users.csv', db_config)
+#import_users_from_csv('users.csv', db_config)
+import_users_from_csv('user_new.csv', db_config)
 
