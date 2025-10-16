@@ -1,6 +1,35 @@
 <?php
 require 'database.php';
+header("X-Content-Type-Options: nosniff");
+header("X-Frame-Options: DENY");
+header("X-XSS-Protection: 1; mode=block");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+
+ini_set('session.cookie_secure', 1);       // HTTPS seulement
+ini_set('session.cookie_httponly', 1);     // Inaccessible en JS
+ini_set('session.cookie_samesite', 'Strict'); // Protection CSRF
 session_start();
+
+#if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+#    die('Token CSRF invalide');
+#}
+
+
+// VÉRIFICATION CSRF OBLIGATOIRE
+if (empty($_POST['csrf_token']) || empty($_SESSION['csrf_token'])) {
+    http_response_code(403);
+    die('Erreur de sécurité : Token CSRF manquant');
+}
+
+if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    http_response_code(403);
+    die('Erreur de sécurité : Token CSRF invalide');
+}
+
+// DÉTRUIRE le token après usage (important !)
+unset($_SESSION['csrf_token']);
+
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
@@ -10,7 +39,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND active = 1");
     $stmt->execute([$email]);
     $user = $stmt->fetch();
-    if ($user && password_verify($password, $user['password'])) {
+    // Vérification du mot de passe original
+    $isPasswordValid = password_verify($password, $user['password']);
+    // Vérification du mot de passe avec la première lettre en minuscule
+    $passwordLowerFirst = lcfirst($password);
+    $isPasswordLowerValid = password_verify($passwordLowerFirst, $user['password']);
+
+    //if ($user && password_verify($password, $user['password'])) {
+    if ($user && ($isPasswordValid || $isPasswordLowerValid)) {
+
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_role'] = $user['role'];
         $_SESSION['user_name'] = $user['firstname'] . ' ' . $user['lastname'];

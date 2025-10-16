@@ -1,6 +1,30 @@
 # Désactiver l'affichage des fichiers du répertoire
 Options -Indexes
 DirectoryIndex planning.php
+<Files "config.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+<Files "config.php">
+    Require all denied
+</Files>
+<Files "admin.php">
+   AuthName "Zone protégée"
+   AuthType Basic
+   AuthUserFile /var/www/html/projectsend/planning-epicafe/.htpasswd
+   Require valid-user
+</Files>
+<Files ".env">
+    Require all denied
+</Files>
+
+<Files "*.sql">
+    Require all denied
+</Files>
+
+<Files "database.php">
+    Require all denied
+</Files>
 <Files "login2.php">
     Satisfy any
     #Allow from all

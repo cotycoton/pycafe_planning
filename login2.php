@@ -1,5 +1,17 @@
 <?php
+
+header("X-Content-Type-Options: nosniff");
+header("X-Frame-Options: DENY");
+header("X-XSS-Protection: 1; mode=block");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+
+ini_set('session.cookie_secure', 1);       // HTTPS seulement
+ini_set('session.cookie_httponly', 1);     // Inaccessible en JS
+ini_set('session.cookie_samesite', 'Strict'); // Protection CSRF
+
 session_start();
+$csrf_token = bin2hex(random_bytes(32));
+$_SESSION['csrf_token'] = $csrf_token;
 require 'database.php';
 
 if (isset($_SESSION['user_id'])) {
@@ -84,7 +96,8 @@ if (isset($_SESSION['user_id'])) {
 <body>
     <div class="login-container">
         <h2>Connexion planning Epicafé</h2>
-    	<form action="login_process.php" method="POST">
+	<form action="login_process.php" method="POST">
+  		<input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
         	<input type="text" name="email" placeholder="Email" required><br>
         	<input type="password" id="password" name="password" placeholder="Mot de passe" required>
 		<br>
