@@ -23,7 +23,7 @@ function getOuverture($date, $plage_horaire) {
 	if ($row = $result->fetch_assoc()) {
 		$etat = $row['etat'];
 	} else {
-		$etat = null; // Pas de réservation trouvée
+		$etat = -1; // Pas de réservation trouvée
 	}
 
 	// Fermeture de la connexion

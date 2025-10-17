@@ -3,6 +3,7 @@
 require 'database.php'; // Connexion à la base de données
 require 'get_reservation.php';
 require 'get_ouverture.php';
+require 'holidays.php';
 require 'get_function.php';
 
 header("X-Content-Type-Options: nosniff");
@@ -286,10 +287,26 @@ $currentUser = $mapping[$_SESSION['user_id']];
 	    cursor: pointer;
             padding:1px;
 	}
+	.ferier{
+            background-color: lightgrey !important;
+	}
+	.ferier.epidej{
+            background-color: lightgrey !important;
+	}
+	.ferier.epidej.not_open{
+            background-color: lightgrey !important;
+	}
 	.epidej{
             background-color: #f39c12 !important;
 
 	}
+	.epidej.not_open {
+            background-color: #ffffff !important;
+            cursor: pointer;
+            padding:1px;
+	}
+	
+
 	.person
 	{
 		content:attr(value);
@@ -991,16 +1008,24 @@ if (isset($_SESSION['user_id'])) {
 			{
 				$jour = $jours_sem[$col];
 				$cellClass = "not_open";
+				$ferier= "";
 				$date_resa="$list_days[$col]";
 				$date_ouv = getOuverture($date_resa,$plage_resa);
+				$isholiday = getHolidayName($date_resa);
 				$isEpidej = isFirstSaturdayOfMonth($date_resa);
 				//echo $date_ouv;
+				if ($isholiday != null)
+				{
+					//echo "<script> console.log(' HOLIDAY " . json_encode($date_resa) . "/" . json_encode($isholiday). "')</script>";
+					$ferier=" ferier";
+				}
 				foreach ($highlightedCells as $highlight) 
 				{
 					if ($highlight["day"] == $col && in_array($timeSlot, $highlight["times"])) 
 					{
 						$cellClass = "highlight";
 						$epidejClass="";
+						echo "<script>console.log('" . "TEST" . json_encode($date_resa) . " / " . json_encode($plage_resa) . " / " . json_encode($date_ouv) . "');</script>";
 						if ($isEpidej == 1)
 							$epidejClass=" epidej";
 						break;
@@ -1010,31 +1035,41 @@ if (isset($_SESSION['user_id'])) {
 						$epidejClass="";
 					}
 				}
-				if ($date_ouv != null)
+				//echo "<script>console.log('" . "DATEOUV TEST " . json_encode($date_resa) . " / " . json_encode($plage_resa) . " / " . json_encode($date_ouv) . "');</script>";
+				if ($date_ouv != -1)
 				{
+					//echo "<script>console.log('" . "TEST2" . json_encode($date_resa) . " / " . json_encode($plage_resa) . " / " . json_encode($date_ouv) . "');</script>";
 					if ($date_ouv == 1)
 					{
 						$cellClass = "highlight";
+						//echo "<script>console.log('" . "OPEN" . json_encode($date_resa) . " / " . json_encode($plage_resa) . " / " . json_encode($date_ouv) . "');</script>";
 					}
 					else
 					{
+						//echo "<script>console.log('" . "NOTOPEN" . json_encode($date_resa) . " / " . json_encode($plage_resa) . " / " . json_encode($date_ouv) . "');</script>";
 						$cellClass = "not_open";
 						$epidejClass="";
 					}
 				}
 				if ($timeSlot === "") 
 				{
-					echo "<td class=\"col_jour\"></td>"; // Cellules vides pour les lignes sans plages horaires
+					echo "<td class=\"col_jour$ferier\"></td>"; // Cellules vides pour les lignes sans plages horaires
 				}
 				else if ($timeSlot === "Evenements") 
 				{
 					$events = getEventsByDate($date_resa,$pdo_event);
 					echo "<td class=\"col_jour ligne_event\" data-param=\"" . $date_resa . "\">";
 					echo "<ul class=\"event-list\">";
-					if ($isEpidej==1)
+					if (($isEpidej==1) && ($isholiday == null))
 					{
 						echo "<li class=\"li\"><div class=\"event\">";
 						echo "Epidej<div class=\"square epidej\"></div>";
+						echo "</div></li>";
+					}
+					if ($isholiday !=null)
+					{
+						echo "<li class=\"li\"><div class=\"\">";
+						echo "$isholiday<div class=\"square ferier\"></div>";
 						echo "</div></li>";
 					}
 					if (!empty($events))
@@ -1077,7 +1112,7 @@ if (isset($_SESSION['user_id'])) {
 					//$randomUsers = array_slice($users, rand(0, count($users) - 3), 3);
 					//$randomUsers = array_slice($users, rand(0, count($users) - 3), rand(0,count($users)));
 					//echo "<td id=\"$jour-$list_days[$col]\" class='$cellClass col_jour'>";
-					echo "<td id=\"$date_resa\" class='$cellClass$epidejClass col_jour'>";
+					echo "<td id=\"$date_resa\" class='$cellClass$epidejClass$ferier col_jour'>";
 					if ($cellClass === "highlight") 
 					{
 						echo "<ul class='user-list'>";
