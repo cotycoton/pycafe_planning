@@ -137,7 +137,7 @@ $timeSlots = [
     "", // Ligne vide pour l'affichage
     "8h10-10h30",
     "10h30-12h30",
-    "", // Ligne vide pour l'affichage
+    "12h30-15h30", // Ligne vide pour l'affichage
     "15h30-17h30",
     "17h30-19h30",
     "19h30-22h00",
